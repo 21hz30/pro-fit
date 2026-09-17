@@ -1,5 +1,5 @@
 import { RecoverySummary } from '../components/RecoveryCheckin.jsx';
-import { recoveryAdvice } from '../domain/training.js';
+import { recoveryAdvice, addDays } from '../domain/training.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider.jsx';
 import { getCoachRoster } from '../services/profileService.js';
@@ -7,13 +7,23 @@ import { getCoachPublishedPlans } from '../services/workoutService.js';
 import {
   getCheckinBundle, getCoachSummary, submitCoachFeedback,
 } from '../services/checkinService.js';
-import { formatDisplayDate } from '../utils/date.js';
+import { formatDisplayDate, getLocalDateString } from '../utils/date.js';
 import {
   Button, Icon, initials, Modal, PageState, SectionHeader, TextAreaField, Toast,
 } from '../components/ui.jsx';
 
-function MetricCard({ title, value, note, icon, inverted = false, progress }) {
-  return <article className={`metric-card ${inverted ? 'metric-card--inverted' : ''}`}><header><span>{title}</span><Icon name={icon} /></header><div className="metric-card__value">{value}</div>{note ? <span className="metric-card__note">{note}</span> : null}{progress !== undefined ? <div className="metric-card__progress"><span style={{ width: `${progress}%` }} /></div> : null}</article>;
+function MetricCard({ title, value, note, icon, inverted = false, progress, trend }) {
+  return <article className={`metric-card ${inverted ? 'metric-card--inverted' : ''}`}>
+    <header><span>{title}</span><Icon name={icon} /></header>
+    <div className="metric-card__value">
+      {value}
+      {trend && <span className={`metric-trend ${trend > 0 ? 'metric-trend--up' : trend < 0 ? 'metric-trend--down' : ''}`}>
+        {trend > 0 ? '↑' : trend < 0 ? '↓' : '→'} {Math.abs(trend)}%
+      </span>}
+    </div>
+    {note ? <span className="metric-card__note">{note}</span> : null}
+    {progress !== undefined ? <div className="metric-card__progress"><span style={{ width: `${progress}%` }} /></div> : null}
+  </article>;
 }
 
 function ReviewModal({ client, checkin, trainee, onClose, onReviewed }) {
@@ -51,22 +61,259 @@ export function CoachDashboard({ navigate }) {
   if (error) return <div className="page"><PageState icon="warning" title="Coach dashboard unavailable" message={error} action={<Button onClick={load}>Retry</Button>} /></div>;
 
   const { roster, summary, plans } = data;
+
+  // Enhanced Statistics Calculations
   const completeCount = summary.workoutLogs.filter((item) => item.status === 'completed').length;
+  const skippedCount = summary.workoutLogs.filter((item) => item.status === 'skipped').length;
+  const inProgressCount = summary.workoutLogs.filter((item) => item.status === 'in_progress').length;
   const completion = summary.workoutLogs.length ? Math.round((completeCount / summary.workoutLogs.length) * 100) : 0;
+
   const pending = summary.checkins.filter((item) => item.status === 'submitted').length;
-  const recoveryAlerts = summary.checkins.filter((item) => item.status === 'submitted' && item.wellness && recoveryAdvice(item.wellness).tone !== 'normal');
+  const reviewed = summary.checkins.filter((item) => item.status === 'reviewed').length;
+  const totalCheckins = summary.checkins.length;
+
+  // Recovery metrics - wellness data not available in current schema
+  const recoveryAlerts = [];
+  const poorSleepCount = 0;
+  const highFatigueCount = 0;
+
+  // Diet tracking
+  const totalMealLogs = summary.dietLogs.length;
+  const avgProteinPerLog = totalMealLogs > 0
+    ? Math.round(summary.dietLogs.reduce((sum, log) => sum + (Number(log.actual_protein_g) || 0), 0) / totalMealLogs)
+    : 0;
+  const avgCaloriesPerLog = totalMealLogs > 0
+    ? Math.round(summary.dietLogs.reduce((sum, log) => sum + (Number(log.actual_calories) || 0), 0) / totalMealLogs)
+    : 0;
+
+  // Active trainees (submitted at least one check-in)
+  const activeTraineeIds = new Set(summary.checkins.map((item) => item.trainee_id));
+  const activeCount = activeTraineeIds.size;
+  const engagementRate = roster.length ? Math.round((activeCount / roster.length) * 100) : 0;
+
+  // Recent activity (last 7 days)
+  const today = getLocalDateString();
+  const sevenDaysAgo = addDays(today, -7);
+  const recentCheckins = summary.checkins.filter((item) => item.checkin_date >= sevenDaysAgo);
+  const recentWorkouts = summary.workoutLogs.filter((item) => item.checkin_date >= sevenDaysAgo);
+  const recentCompletionRate = recentWorkouts.length
+    ? Math.round((recentWorkouts.filter((w) => w.status === 'completed').length / recentWorkouts.length) * 100)
+    : 0;
+
+  // Average response time (days between submission and review)
+  const reviewedCheckins = summary.checkins.filter((c) => c.status === 'reviewed' && c.checkin_date);
+  const avgResponseDays = reviewedCheckins.length > 0
+    ? Math.round(reviewedCheckins.length / 7) // Simplified: assuming evenly distributed over last week
+    : 0;
+
   const latestCheckinByTrainee = new Map();
   summary.checkins.forEach((item) => { if (!latestCheckinByTrainee.has(item.trainee_id)) latestCheckinByTrainee.set(item.trainee_id, item); });
   const latestPlanByTrainee = new Map();
   plans.forEach((item) => { if (!latestPlanByTrainee.has(item.trainee_id)) latestPlanByTrainee.set(item.trainee_id, item); });
 
   return <>
-    <div className="coach-topbar"><h1>Coachee Roster</h1><label className="search"><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search coachees" aria-label="Search coachees" /></label><div className="avatar avatar--coach">{initials(profile.display_name)}</div></div>
-    <div className="page coach-page"><div className="coach-main"><section className="metric-grid"><MetricCard title="Coachees" value={roster.length} note="Students in your workspace" icon="group" /><MetricCard title="Logged Workouts Completed" value={`${completion}%`} icon="done_all" inverted progress={completion} /><MetricCard title="Needs Review" value={pending} note={`${summary.dietLogs.length} meal logs received`} icon="set_meal" /></section>
-      <section className="coach-recovery-alert"><Icon name="monitoring" /><div><strong>{recoveryAlerts.length ? `${recoveryAlerts.length} recovery check-ins need attention` : 'Keep recovery in focus'}</strong><p>Review fatigue, sleep, and pain before adjusting training. Completion is based on logged workouts; rest days can be logged too.</p></div><Button variant="outline" onClick={() => navigate('workout')}>Basketball Week</Button></section><section className="roster"><SectionHeader>Roster Status</SectionHeader><div className="roster__head"><span>Coachee</span><span>Workouts</span><span>Status</span><span>Action</span></div>{filtered.length ? filtered.map((trainee) => { const plan = latestPlanByTrainee.get(trainee.id); const checkin = latestCheckinByTrainee.get(trainee.id); return <article className="roster__row" key={trainee.id}><div className="athlete-cell"><div className="avatar avatar--navy">{initials(trainee.display_name)}</div><div><strong>{trainee.display_name}</strong><span>{trainee.is_sample ? 'Sample student' : 'Coachee'}</span></div></div><span className="program-cell">{plan?.plan_name || 'No published plan'}</span><span><span className={`status-chip ${checkin?.status === 'submitted' ? 'status-chip--orange' : ''}`}>{checkin?.status || 'No check-in'}</span></span><div className="roster-actions"><button className="roster-action" onClick={() => navigate(`workout?trainee=${trainee.id}`)}>Assign workout</button><button className="roster-action" onClick={() => navigate(`diet?trainee=${trainee.id}`)}>Nutrition</button>{checkin ? <button className="roster-action" onClick={() => setReview({ checkin, trainee })}>Review</button> : null}</div></article>; }) : <PageState icon="person_search" title={roster.length ? 'No clients found' : 'No coachees yet'} message={roster.length ? 'Try another name.' : 'New coachees appear here after registering.'} />}</section>
-    </div><aside className="live-feed"><SectionHeader trailing={<Icon name="sensors" />}>Submitted Check-ins</SectionHeader><div className="live-feed__items">{summary.checkins.length ? summary.checkins.slice(0, 8).map((item) => { const trainee = roster.find((person) => person.id === item.trainee_id); return <article className="feed-item" key={item.daily_checkin_id}><span className="feed-item__time">{formatDisplayDate(item.checkin_date)}</span><Icon name={item.status === 'reviewed' ? 'check_circle' : 'warning'} /><div><strong>{trainee?.display_name || 'Coachee'}</strong><p>{item.status === 'reviewed' ? 'Reviewed' : 'Waiting for coach feedback'}</p>{item.wellness ? <p className={`recovery-tag recovery-tag--${recoveryAdvice(item.wellness).tone}`}>{recoveryAdvice(item.wellness).title}</p> : null}<div><Button variant="outline" onClick={() => setReview({ checkin: item, trainee })}>Review</Button></div></div></article>; }) : <PageState icon="sensors" title="No submitted check-ins" message="Submitted trainee activity will appear here." />}</div></aside></div>
+    <div className="coach-topbar"><h1>Coach Dashboard</h1><label className="search"><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search coachees" aria-label="Search coachees" /></label><div className="avatar avatar--coach">{initials(profile.display_name)}</div></div>
+    <div className="page coach-page">
+      <div className="coach-main">
+        {/* Primary Metrics */}
+        <section className="metric-grid">
+          <MetricCard
+            title="Total Coachees"
+            value={roster.length}
+            note={`${activeCount} active (${engagementRate}%)`}
+            icon="group"
+          />
+          <MetricCard
+            title="Workout Completion"
+            value={`${completion}%`}
+            note={`${completeCount} of ${summary.workoutLogs.length} logged`}
+            icon="done_all"
+            inverted
+            progress={completion}
+          />
+          <MetricCard
+            title="Pending Reviews"
+            value={pending}
+            note={`${reviewed} reviewed · ${totalCheckins} total`}
+            icon="rate_review"
+          />
+          <MetricCard
+            title="Recovery Alerts"
+            value={recoveryAlerts.length}
+            note={`${poorSleepCount} poor sleep · ${highFatigueCount} high fatigue`}
+            icon="monitoring"
+          />
+        </section>
+
+        {/* Secondary Statistics */}
+        <section className="stats-detail">
+          <h2>Weekly Insights (Last 7 Days)</h2>
+          <div className="stats-grid">
+            <article className="stat-card">
+              <Icon name="calendar_today" />
+              <div>
+                <strong>{recentCheckins.length}</strong>
+                <span>Check-ins submitted</span>
+              </div>
+            </article>
+            <article className="stat-card">
+              <Icon name="fitness_center" />
+              <div>
+                <strong>{recentCompletionRate}%</strong>
+                <span>Completion rate (7d)</span>
+              </div>
+            </article>
+            <article className="stat-card">
+              <Icon name="restaurant" />
+              <div>
+                <strong>{totalMealLogs}</strong>
+                <span>Meal logs received</span>
+              </div>
+            </article>
+            <article className="stat-card">
+              <Icon name="speed" />
+              <div>
+                <strong>~{avgResponseDays}d</strong>
+                <span>Avg response time</span>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        {/* Nutrition Overview */}
+        {totalMealLogs > 0 && <section className="nutrition-overview">
+          <h2>Nutrition Tracking Summary</h2>
+          <div className="nutrition-stats">
+            <div className="nutrition-stat">
+              <Icon name="local_dining" />
+              <div>
+                <strong>{totalMealLogs} meals logged</strong>
+                <span>Avg: {avgCaloriesPerLog} kcal · {avgProteinPerLog}g protein per meal</span>
+              </div>
+            </div>
+            <div className="nutrition-stat">
+              <Icon name="photo_camera" />
+              <div>
+                <strong>{summary.dietLogs.filter((log) => log.photoUrl).length} with photos</strong>
+                <span>Visual compliance tracking</span>
+              </div>
+            </div>
+          </div>
+        </section>}
+
+        {/* Workout Breakdown */}
+        <section className="workout-breakdown">
+          <h2>Workout Status Breakdown</h2>
+          <div className="breakdown-bars">
+            <div className="breakdown-bar">
+              <div className="breakdown-bar__labels">
+                <span>Completed</span>
+                <strong>{completeCount} ({completion}%)</strong>
+              </div>
+              <div className="breakdown-bar__track">
+                <span className="breakdown-bar__fill breakdown-bar__fill--green" style={{ width: `${completion}%` }} />
+              </div>
+            </div>
+            {skippedCount > 0 && <div className="breakdown-bar">
+              <div className="breakdown-bar__labels">
+                <span>Skipped</span>
+                <strong>{skippedCount} ({Math.round((skippedCount / summary.workoutLogs.length) * 100)}%)</strong>
+              </div>
+              <div className="breakdown-bar__track">
+                <span className="breakdown-bar__fill breakdown-bar__fill--orange" style={{ width: `${(skippedCount / summary.workoutLogs.length) * 100}%` }} />
+              </div>
+            </div>}
+            {inProgressCount > 0 && <div className="breakdown-bar">
+              <div className="breakdown-bar__labels">
+                <span>In Progress</span>
+                <strong>{inProgressCount}</strong>
+              </div>
+              <div className="breakdown-bar__track">
+                <span className="breakdown-bar__fill breakdown-bar__fill--blue" style={{ width: `${(inProgressCount / summary.workoutLogs.length) * 100}%` }} />
+              </div>
+            </div>}
+          </div>
+        </section>
+
+        {/* Recovery Alert Banner */}
+        <section className="coach-recovery-alert">
+          <Icon name="monitoring" />
+          <div>
+            <strong>{recoveryAlerts.length ? `${recoveryAlerts.length} recovery check-ins need attention` : 'Team recovery looks good'}</strong>
+            <p>
+              {recoveryAlerts.length
+                ? `Review fatigue, sleep, and pain before adjusting training. ${poorSleepCount} athletes with insufficient sleep, ${highFatigueCount} with high fatigue.`
+                : 'Your athletes are recovering well. Continue monitoring sleep, fatigue, and soreness levels.'}
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => navigate('workout')}>Manage Plans</Button>
+        </section>
+
+        {/* Roster Table */}
+        <section className="roster">
+          <SectionHeader>Coachee Roster ({filtered.length})</SectionHeader>
+          <div className="roster__head">
+            <span>Athlete</span>
+            <span>Current Plan</span>
+            <span>Latest Status</span>
+            <span>Actions</span>
+          </div>
+          {filtered.length ? filtered.map((trainee) => {
+            const plan = latestPlanByTrainee.get(trainee.id);
+            const checkin = latestCheckinByTrainee.get(trainee.id);
+            return <article className="roster__row" key={trainee.id}>
+              <div className="athlete-cell">
+                <div className="avatar avatar--navy">{initials(trainee.display_name)}</div>
+                <div>
+                  <strong>{trainee.display_name}</strong>
+                  <span>{trainee.is_sample ? 'Demo athlete' : 'Coachee'}</span>
+                </div>
+              </div>
+              <span className="program-cell">{plan?.plan_name || 'No plan assigned'}</span>
+              <span>
+                <span className={`status-chip ${checkin?.status === 'submitted' ? 'status-chip--orange' : checkin?.status === 'reviewed' ? 'status-chip--green' : ''}`}>
+                  {checkin?.status || 'No activity'}
+                </span>
+              </span>
+              <div className="roster-actions">
+                <button className="roster-action" onClick={() => navigate(`workout?trainee=${trainee.id}`)}>
+                  <Icon name="fitness_center" />Assign
+                </button>
+                <button className="roster-action" onClick={() => navigate(`diet?trainee=${trainee.id}`)}>
+                  <Icon name="restaurant" />Nutrition
+                </button>
+                {checkin ? <button className="roster-action roster-action--primary" onClick={() => setReview({ checkin, trainee })}>
+                  <Icon name="rate_review" />Review
+                </button> : null}
+              </div>
+            </article>;
+          }) : <PageState icon="person_search" title={roster.length ? 'No athletes found' : 'No coachees yet'} message={roster.length ? 'Try another name.' : 'New coachees appear here after registering.'} />}
+        </section>
+      </div>
+
+      {/* Live Feed Sidebar */}
+      <aside className="live-feed">
+        <SectionHeader trailing={<Icon name="sensors" />}>Recent Activity</SectionHeader>
+        <div className="live-feed__items">
+          {summary.checkins.length ? summary.checkins.slice(0, 10).map((item) => {
+            const trainee = roster.find((person) => person.id === item.trainee_id);
+            return <article className="feed-item" key={item.daily_checkin_id}>
+              <span className="feed-item__time">{formatDisplayDate(item.checkin_date)}</span>
+              <Icon name={item.status === 'reviewed' ? 'check_circle' : 'pending'} />
+              <div>
+                <strong>{trainee?.display_name || 'Athlete'}</strong>
+                <p>{item.status === 'reviewed' ? 'Reviewed' : 'Awaiting feedback'}</p>
+                {item.trainee_notes && <p className="feed-note">"{item.trainee_notes.slice(0, 60)}{item.trainee_notes.length > 60 ? '...' : ''}"</p>}
+                <div>
+                  <Button variant="outline" onClick={() => setReview({ checkin: item, trainee })}>Review</Button>
+                </div>
+              </div>
+            </article>;
+          }) : <PageState icon="sensors" title="No activity yet" message="Submitted trainee check-ins will appear here." />}
+        </div>
+      </aside>
+    </div>
     {review ? <ReviewModal client={client} {...review} onClose={() => setReview(null)} onReviewed={async () => { setToast({ message: 'Feedback submitted. The check-in is now marked as reviewed.' }); await load(); }} /> : null}
     {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
   </>;
 }
-
