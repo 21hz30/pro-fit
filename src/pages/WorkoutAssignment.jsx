@@ -3,7 +3,7 @@ import { TrainingPrinciples } from '../components/TrainingWeek.jsx';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider.jsx';
 import { getCoachRoster } from '../services/profileService.js';
-import { getCoachExercises, saveWorkoutPlan } from '../services/workoutService.js';
+import { getCoachExercises, saveDraft } from '../services/workoutService.js';
 import { getLocalDateString } from '../utils/date.js';
 import {
   Button, Field, Icon, initials, PageState, SelectField, TextAreaField, Toast,
@@ -54,7 +54,7 @@ export function WorkoutAssignment({ requestedTraineeId }) {
   async function save(publish) {
     setBusy(true);
     try {
-      const result = await saveWorkoutPlan(client, plan, { publish });
+      const result = await saveDraft(client, plan, { publish });
       setPlan((current) => ({ ...current, workoutPlanId: result.workoutPlanId })); setPublished(publish);
       setToast({ message: publish ? 'Workout plan published.' : 'Workout draft saved.' });
       if (publish) setLibrary(await getCoachExercises(client));

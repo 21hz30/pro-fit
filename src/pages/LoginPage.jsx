@@ -86,7 +86,7 @@ export function LoginPage() {
               {mode === 'login' ? 'Sign in' : mode === 'register' ? 'Create account' : 'Send reset link'}
             </Button>
           </form>
-          {client.isLocal && mode === 'login' ? <div className="demo-accounts"><span>Explore the sample workspace</span><div>{DEMO_ACCOUNTS.map((account) => <Button key={account.id} variant="outline" busy={busy} onClick={() => demo(account)}>{account.display_name} · {account.role === 'coach' ? 'Coach' : 'Coachee'}</Button>)}</div><small>Fictional activity illustrates the experience. New accounts start fresh.</small></div> : null}
+          {mode === 'login' ? <div className="demo-accounts"><span>Quick demo login</span><div>{DEMO_ACCOUNTS.map((account) => <Button key={account.id} variant="outline" busy={busy} onClick={() => demo(account)}>{account.display_name} · {account.role === 'coach' ? 'Coach' : 'Coachee'}</Button>)}</div><small>{client.isLocal ? 'Fictional activity illustrates the experience. New accounts start fresh.' : 'Demo accounts with sample data for exploring Pro-fit.'}</small></div> : null}
           <div className="login-switch">
             {mode === 'login' ? <>New here? <button onClick={() => changeMode('register')}>Create an account</button></> : <>Already have an account? <button onClick={() => changeMode('login')}>Back to sign in</button></>}
           </div>

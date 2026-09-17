@@ -9,8 +9,8 @@ import { saveLocalPhoto, deleteLocalPhoto, localPhotoUrl } from './photoStore.js
 export const LOCAL_DATA_KEY = 'pro-fit.local.v1';
 export const LOCAL_SESSION_KEY = 'pro-fit.session.v1';
 export const DEMO_ACCOUNTS = [
-  { id: 'local-ben', display_name: 'Ben', role: 'coach', email: 'coach@profit.local' },
-  { id: 'local-michael', display_name: 'Michael', role: 'trainee', email: 'coachee@profit.local' },
+  { id: 'demo-coach', display_name: 'Coach Ben', role: 'coach', email: 'demo-coach@pro-fit.app' },
+  { id: 'demo-athlete', display_name: 'Michael', role: 'trainee', email: 'demo-athlete@pro-fit.app' },
 ];
 export const DEMO_PASSWORD = 'ProFit2026!';
 const now = () => new Date().toISOString();
