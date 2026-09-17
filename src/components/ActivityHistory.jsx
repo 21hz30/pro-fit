@@ -1,0 +1,13 @@
+import { Icon } from './ui.jsx';
+
+export function ActivityHistory({ records, onSelect, isSample }) {
+  const workouts = records.flatMap((r) => r.workouts);
+  const sessions = workouts.filter((w) => w.status === 'completed').length;
+  const sleep = records.map((r) => r.wellness?.sleepHours).filter((v) => v != null && v !== '');
+  const averageSleep = sleep.length ? (sleep.reduce((sum, h) => sum + Number(h), 0) / sleep.length).toFixed(1) : '—';
+  const feedback = records.flatMap((r) => r.feedback.map((f) => ({ ...f, date: r.checkin_date })));
+  return <section className="activity-section" aria-labelledby="activity-heading"><div className="activity-heading"><div><span className="eyebrow">CONSISTENCY OVER PERFECTION</span><h2 id="activity-heading">Your last 14 days</h2></div><span className="sample-label">{isSample ? 'Illustrative sample history' : 'From your submitted check-ins'}</span></div>
+    <div className="progress-stats"><article><Icon name="calendar_today" /><strong>{records.length}<small>check-ins</small></strong><p>Recovery days count, too.</p></article><article><Icon name="fitness_center" /><strong>{sessions}<small>sessions completed</small></strong><p>Based on your workout logs.</p></article><article><Icon name="monitoring" /><strong>{averageSleep}<small>hours of sleep on average</small></strong><p>{sleep.length ? `From ${sleep.length} logged nights.` : 'Log sleep to see your pattern.'}</p></article></div>
+    {records.length ? <div className="activity-grid"><div className="activity-list">{records.slice(0, 5).map((r) => <button type="button" key={r.daily_checkin_id} onClick={() => onSelect(r.checkin_date)}><span className="activity-date">{new Date(`${r.checkin_date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span><span><strong>{r.workouts[0]?.status === 'skipped' ? 'Rest & recovery' : r.workouts[0]?.title || 'Daily check-in'}</strong><small>{r.wellness?.sleepHours != null ? `${r.wellness.sleepHours}h sleep · ` : ''}{r.status === 'reviewed' ? 'Coach reviewed' : 'Awaiting feedback'}</small></span><Icon name="arrow_forward" /></button>)}</div><aside className="coach-note"><span className="eyebrow">LATEST COACH FEEDBACK</span>{feedback.length ? <><Icon name="check_circle" /><p>{feedback[0].feedback_content}</p><button type="button" onClick={() => onSelect(feedback[0].date)}>View check-in <Icon name="arrow_forward" /></button></> : <p>Your coach’s feedback will appear here after a review. Share what worked and what was hard.</p>}</aside></div> : <div className="history-empty"><Icon name="calendar_today" /><p>Your story starts with one check-in. Log training or rest, then submit it to your coach.</p></div>}
+  </section>;
+}

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pro-fit - Client Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-primary": "#b3c5ff",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed-variant": "#2a4386",
+                      "on-secondary-container": "#fffbff",
+                      "surface-dim": "#dcd9d9",
+                      "tertiary-fixed": "#e2e2e2",
+                      "on-primary-fixed": "#00174a",
+                      "on-secondary-fixed": "#3c0700",
+                      "tertiary": "#131515",
+                      "primary-container": "#002366",
+                      "on-tertiary-container": "#8f9090",
+                      "on-secondary": "#ffffff",
+                      "outline-variant": "#c5c6d2",
+                      "primary-fixed-dim": "#b3c5ff",
+                      "surface": "#fcf9f8",
+                      "secondary-fixed": "#ffdad2",
+                      "secondary-fixed-dim": "#ffb4a2",
+                      "on-tertiary-fixed-variant": "#454747",
+                      "on-primary": "#ffffff",
+                      "tertiary-container": "#272929",
+                      "surface-tint": "#435b9f",
+                      "surface-bright": "#fcf9f8",
+                      "on-tertiary": "#ffffff",
+                      "secondary": "#af2800",
+                      "surface-container-high": "#eae7e7",
+                      "outline": "#757682",
+                      "inverse-surface": "#313030",
+                      "on-background": "#1c1b1b",
+                      "surface-variant": "#e5e2e1",
+                      "tertiary-fixed-dim": "#c6c6c7",
+                      "error-container": "#ffdad6",
+                      "on-secondary-fixed-variant": "#891d00",
+                      "surface-container-highest": "#e5e2e1",
+                      "error": "#ba1a1a",
+                      "secondary-container": "#db3400",
+                      "on-surface": "#1c1b1b",
+                      "on-tertiary-fixed": "#1a1c1c",
+                      "on-error-container": "#93000a",
+                      "primary": "#00113a",
+                      "surface-container-low": "#f6f3f2",
+                      "surface-container": "#f0eded",
+                      "on-primary-container": "#758dd5",
+                      "inverse-on-surface": "#f3f0ef",
+                      "on-surface-variant": "#444650",
+                      "primary-fixed": "#dbe1ff",
+                      "background": "#fcf9f8"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "border-width": "2px",
+                      "lg": "24px",
+                      "xl": "48px",
+                      "unit": "4px",
+                      "grid-gutter": "24px",
+                      "md": "16px",
+                      "grid-margin": "32px",
+                      "sm": "8px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Space Grotesk"
+                      ],
+                      "body-lg": [
+                              "Space Grotesk"
+                      ],
+                      "label-caps": [
+                              "Space Grotesk"
+                      ],
+                      "display-lg": [
+                              "Space Grotesk"
+                      ],
+                      "mono-data": [
+                              "Space Grotesk"
+                      ],
+                      "headline-lg-mobile": [
+                              "Space Grotesk"
+                      ],
+                      "headline-md": [
+                              "Space Grotesk"
+                      ],
+                      "headline-lg": [
+                              "Space Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg": [
+                              "72px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "letterSpacing": "-0.04em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "mono-data": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.surface-container-lowest');
+        }
+        
+        /* Neo-brutalist custom utilities */
+        .brutal-border {
+            border: theme('spacing.border-width') solid theme('colors.primary');
+        }
+        
+        .brutal-shadow {
+            box-shadow: 4px 4px 0px 0px theme('colors.primary');
+        }
+        
+        .brutal-shadow-hover:hover {
+            box-shadow: 4px 4px 0px 0px theme('colors.secondary');
+            transform: translate(-4px, -4px);
+        }
+        
+        .brutal-btn {
+            border: theme('spacing.border-width') solid theme('colors.primary');
+            background-color: theme('colors.secondary');
+            color: theme('colors.on-secondary');
+            transition: all 0.2s ease;
+        }
+        
+        .brutal-btn:hover {
+            box-shadow: 4px 4px 0px 0px theme('colors.primary');
+            transform: translate(-4px, -4px);
+        }
+
+        .brutal-input {
+            border: theme('spacing.border-width') solid theme('colors.primary');
+            background-color: theme('colors.surface-container-lowest');
+            transition: border-color 0.2s ease;
+        }
+        
+        .brutal-input:focus {
+            outline: none;
+            border-color: theme('colors.secondary');
+        }
+
+        /* Hide scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        * {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="text-on-surface font-body-md bg-background antialiased flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-primary text-on-primary font-label-caps text-label-caps h-screen w-64 border-r-2 border-primary fixed left-0 top-0 flex-col z-40">
+<div class="p-lg border-b-2 border-primary flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary text-[32px]" data-icon="fitness_center" data-weight="fill" style="font-variation-settings: 'FILL' 1;">fitness_center</span>
+<div>
+<h1 class="font-headline-md text-headline-md text-secondary-container m-0 p-0 leading-none">PRO-FIT</h1>
+<p class="text-[10px] text-primary-fixed-dim mt-xs tracking-wider uppercase opacity-80">Athletic Architecture</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto py-md flex flex-col gap-xs px-sm">
+<a class="flex items-center gap-md text-primary-fixed-dim hover:text-white py-md px-lg transition-all duration-200 hover:bg-primary-container" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-md text-primary-fixed-dim hover:text-white py-md px-lg transition-all duration-200 hover:bg-primary-container" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center">fitness_center</span>
+                Workouts
+            </a>
+<a class="flex items-center gap-md text-primary-fixed-dim hover:text-white py-md px-lg transition-all duration-200 hover:bg-primary-container" href="#">
+<span class="material-symbols-outlined" data-icon="restaurant">restaurant</span>
+                Nutrition
+            </a>
+<a class="flex items-center gap-md bg-secondary text-on-secondary border-2 border-primary py-md px-lg -translate-x-1 -translate-y-1 shadow-[4px_4px_0px_0px_#00113a] transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+                Clients
+            </a>
+<a class="flex items-center gap-md text-primary-fixed-dim hover:text-white py-md px-lg transition-all duration-200 hover:bg-primary-container" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+                Schedule
+            </a>
+<a class="flex items-center gap-md text-primary-fixed-dim hover:text-white py-md px-lg transition-all duration-200 hover:bg-primary-container" href="#">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+                Analytics
+            </a>
+</div>
+<div class="p-md mt-auto border-t-2 border-primary flex flex-col gap-xs">
+<button class="brutal-btn w-full py-md px-lg font-label-caps text-label-caps flex items-center justify-center gap-sm mb-md">
+<span class="material-symbols-outlined text-[16px]" data-icon="add">add</span>
+                Assign Plan
+            </button>
+<a class="flex items-center gap-md text-primary-fixed-dim hover:text-white py-sm px-md transition-all duration-200 hover:bg-primary-container" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                Support
+            </a>
+<a class="flex items-center gap-md text-primary-fixed-dim hover:text-white py-sm px-md transition-all duration-200 hover:bg-primary-container" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Logout
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col ml-0 md:ml-64 w-full h-full bg-surface-container-low overflow-y-auto">
+<!-- TopNavBar (Mobile only for Nav, but acts as Header on Desktop) -->
+<header class="bg-surface text-primary font-body-md text-body-md w-full border-b-2 border-primary flex justify-between items-center px-lg py-sm sticky top-0 z-30">
+<div class="flex items-center gap-md">
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h2 class="font-headline-md text-headline-md uppercase tracking-tighter hidden md:block">Client Roster</h2>
+<h2 class="font-headline-md text-headline-md uppercase tracking-tighter md:hidden">Pro-fit</h2>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative hidden sm:flex items-center">
+<span class="material-symbols-outlined absolute left-sm text-on-surface-variant pointer-events-none" data-icon="search">search</span>
+<input class="brutal-input pl-xl pr-sm py-sm font-label-caps text-label-caps w-64 uppercase placeholder:text-on-surface-variant" placeholder="SEARCH CLIENTS" type="text"/>
+</div>
+<button class="p-xs text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container transition-transform duration-100 active:translate-x-1 active:translate-y-1 rounded-none">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="w-8 h-8 brutal-border bg-tertiary-fixed overflow-hidden flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="A rugged, high-contrast black and white portrait of an athletic coach looking focused, set against a stark geometric background, raw neo-brutalist style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbR7vPw2MTb_ghuE9Cl_Fr3p99x2o5g0U5QTBHenOvMz-P0UWb4nXZK0vMJnX-v0CTvgmXXXAw7tsIx35zFjjjgr6Rd_jjhqR2t7j9XYH2Or7QYpw1N5u49odF5Tir1GxhHdnHlYe2G4fLHXm2tGn3T6GQvefOxeR1mh_rPwq7L_8p80IY5x1rIsXkQBuKt8eIt1r_7BSTXDxkKeWtRYjMe6p8SNtCf3YMUAwkJEHvYW54XSVbz7Eb"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-md md:p-grid-margin w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-grid-gutter flex-1 items-start">
+<!-- Left Column: Overview & Activity (Spans 8 cols on lg) -->
+<div class="lg:col-span-8 flex flex-col gap-grid-gutter">
+<!-- Module 1: Fleet Overview (Bento style) -->
+<section class="grid grid-cols-1 sm:grid-cols-3 gap-md md:gap-lg">
+<!-- Metric Card 1 -->
+<div class="bg-surface-container-lowest brutal-border brutal-shadow p-lg flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start mb-md">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant">Active Clients</span>
+<span class="material-symbols-outlined text-primary" data-icon="group">group</span>
+</div>
+<div class="flex items-baseline gap-sm">
+<span class="font-display-lg text-display-lg text-primary">24</span>
+<span class="font-mono-data text-mono-data text-secondary">+3 this week</span>
+</div>
+</div>
+<!-- Metric Card 2 -->
+<div class="bg-primary text-on-primary brutal-border p-lg flex flex-col justify-between min-h-[140px] relative overflow-hidden group hover:brutal-shadow transition-all">
+<div class="absolute inset-0 bg-primary-container opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="relative z-10 flex justify-between items-start mb-md">
+<span class="font-label-caps text-label-caps uppercase text-primary-fixed-dim">WOD Completion</span>
+<span class="material-symbols-outlined text-secondary" data-icon="done_all">done_all</span>
+</div>
+<div class="relative z-10 flex items-baseline gap-sm">
+<span class="font-display-lg text-display-lg text-on-primary">87%</span>
+</div>
+<!-- brutal progress bar -->
+<div class="relative z-10 w-full h-2 bg-primary-container mt-sm brutal-border border-primary-fixed-dim">
+<div class="h-full bg-secondary w-[87%]"></div>
+</div>
+</div>
+<!-- Metric Card 3 -->
+<div class="bg-surface-container-lowest brutal-border brutal-shadow p-lg flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start mb-md">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant">Macro Adherence</span>
+<span class="material-symbols-outlined text-primary" data-icon="set_meal">set_meal</span>
+</div>
+<div class="flex items-baseline gap-sm">
+<span class="font-display-lg text-display-lg text-primary">92%</span>
+</div>
+<div class="w-full h-2 bg-surface-variant mt-sm brutal-border">
+<div class="h-full bg-primary w-[92%]"></div>
+</div>
+</div>
+</section>
+<!-- Module 2: Client List -->
+<section class="bg-surface-container-lowest brutal-border flex flex-col">
+<div class="bg-primary text-on-primary p-md md:p-lg border-b-2 border-primary flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md uppercase tracking-tighter m-0">Roster Status</h3>
+<div class="flex gap-sm">
+<button class="brutal-btn px-md py-xs font-label-caps text-label-caps text-[10px]">Filter</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b-2 border-primary font-label-caps text-label-caps text-on-surface-variant uppercase bg-surface-variant">
+<th class="p-md border-r-2 border-primary">Athlete</th>
+<th class="p-md border-r-2 border-primary hidden sm:table-cell">Program</th>
+<th class="p-md border-r-2 border-primary">Status</th>
+<th class="p-md text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md">
+<!-- Row 1 -->
+<tr class="border-b-2 border-primary hover:bg-surface-container-low transition-colors group">
+<td class="p-md border-r-2 border-primary">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 brutal-border bg-tertiary-fixed overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A highly detailed close-up portrait of a determined female athlete in a dark, gritty neo-brutalist gym setting, stark lighting, high contrast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6eP7L0ayZUYmd4x-GPtwDbbs5Dh6jBo3QPP93mEmHnK0M-xdi9kXqOkEEr0XNv0_bDwtBtGjsQZ9G4NwcxH7P8e977Xn0HTDakTydEIyukUy0k1xsFbhP2gJez9U2ZbuIA1qG-fgvdThyAmVUDU3SyVZB4CO_hzUVObRMES0TeF7CHXsu_zVuJx-MxYGlM1-0zz9eYKO-08-AiiC4UvSWd0bpX-vEjkcz3njhedcB1wUmr_KiahhK"/>
+</div>
+<div>
+<div class="font-bold text-primary group-hover:text-secondary transition-colors">Sarah Jenkins</div>
+<div class="font-mono-data text-[12px] text-on-surface-variant">Checked in 2h ago</div>
+</div>
+</div>
+</td>
+<td class="p-md border-r-2 border-primary hidden sm:table-cell font-mono-data">Hypertrophy Phase 3</td>
+<td class="p-md border-r-2 border-primary">
+<span class="inline-block border border-primary bg-primary text-on-primary px-sm py-xs font-label-caps text-[10px] uppercase">On Track</span>
+</td>
+<td class="p-md text-right">
+<button class="brutal-btn px-md py-xs font-label-caps text-label-caps">Assign WOD</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="border-b-2 border-primary hover:bg-surface-container-low transition-colors group">
+<td class="p-md border-r-2 border-primary">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 brutal-border bg-tertiary-fixed overflow-hidden shrink-0">
+<img class="w-full h-full object-cover grayscale" data-alt="A gritty neo-brutalist portrait of a male weightlifter, intense expression, heavy shadows, striking stark white background with geometric deep blue accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0IB-glUES33HO88ej-TBjwTJpFK1ZtfaPx58ULw6QDmtowyPGcHGcMSXOUZ0pf2zMltbXc8aoO-aifV34y6Eysb0V_IZ-lLBFCNrZ0L38cDOwPtvCdy309j2jrPu7awCzBvrBNeqIswhTT40g4361atjS1nVNvXCUnRZq2s0zbAheGRW_x812zyPjTEZSlNNkVNeDkW2HJXpnB0sHSq2PTOSl2o0esenrqUKVp3JqwhOddLeuRplE"/>
+</div>
+<div>
+<div class="font-bold text-primary group-hover:text-secondary transition-colors">Marcus Chen</div>
+<div class="font-mono-data text-[12px] text-on-surface-variant">Needs Review</div>
+</div>
+</div>
+</td>
+<td class="p-md border-r-2 border-primary hidden sm:table-cell font-mono-data">Powerlifting Prep</td>
+<td class="p-md border-r-2 border-primary">
+<span class="inline-block border border-primary bg-secondary text-on-secondary px-sm py-xs font-label-caps text-[10px] uppercase">Missed Check-in</span>
+</td>
+<td class="p-md text-right">
+<button class="brutal-btn px-md py-xs font-label-caps text-label-caps bg-surface-container-lowest text-primary hover:bg-primary hover:text-on-primary">Nudge</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-md border-r-2 border-primary">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 brutal-border bg-tertiary-fixed overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Abstract geometric neo-brutalist avatar placeholder, intersecting solid blocks of deep blue and bright orange on stark white." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSpdfacOfYcGSfnigd97Cd_lRyTBU9Nb6rSatUYPZK1ELr7xt4V3Fom30uEwPPU2fuyuts7N0yLEzRpFuGKOsRnocvtJwDWABb2FDy_uk06w7apEIY5LzUZ2jWlzG6kiaI_D51Qx3RFjvx4uoYpoP2gNwXVBudyzBOo1t8rIxwvzZW2MycS2BB968k1JqQHj5I9JS235K_QDtZ37cSMiNYoyo4WLI3LAXEHOrWEPXuB0EhroAuNlNv"/>
+</div>
+<div>
+<div class="font-bold text-primary group-hover:text-secondary transition-colors">Elena Rodriguez</div>
+<div class="font-mono-data text-[12px] text-on-surface-variant">Checked in 1d ago</div>
+</div>
+</div>
+</td>
+<td class="p-md border-r-2 border-primary hidden sm:table-cell font-mono-data">Endurance Base</td>
+<td class="p-md border-r-2 border-primary">
+<span class="inline-block border border-primary bg-primary text-on-primary px-sm py-xs font-label-caps text-[10px] uppercase">On Track</span>
+</td>
+<td class="p-md text-right">
+<button class="brutal-btn px-md py-xs font-label-caps text-label-caps">Assign WOD</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Right Column: Recent Activity (Spans 4 cols on lg) -->
+<div class="lg:col-span-4 flex flex-col gap-grid-gutter h-full">
+<section class="bg-surface-container-lowest brutal-border flex flex-col h-full">
+<div class="bg-primary text-on-primary p-md border-b-2 border-primary flex justify-between items-center shrink-0">
+<h3 class="font-headline-md text-[20px] uppercase tracking-tighter m-0">Live Feed</h3>
+<span class="material-symbols-outlined text-secondary animate-pulse" data-icon="sensors">sensors</span>
+</div>
+<div class="p-md flex flex-col gap-md overflow-y-auto">
+<!-- Feed Item 1 -->
+<div class="border-2 border-primary p-md relative group hover:bg-surface-container-low transition-colors">
+<div class="absolute -left-2 -top-2 bg-secondary text-on-secondary font-mono-data text-[10px] px-xs border border-primary z-10">10m ago</div>
+<div class="flex gap-sm items-start mt-xs">
+<span class="material-symbols-outlined text-primary mt-xs shrink-0" data-icon="videocam">videocam</span>
+<div>
+<p class="font-bold text-primary leading-tight text-[14px]">Sarah Jenkins uploaded a form check video</p>
+<p class="font-mono-data text-[12px] text-on-surface-variant mt-xs">Back Squat - 225lbs x 5</p>
+<div class="mt-sm flex gap-xs">
+<button class="border border-primary bg-primary text-on-primary px-sm py-xs font-label-caps text-[10px] hover:bg-secondary transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]" data-icon="play_arrow">play_arrow</span> Review
+                                        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Feed Item 2 -->
+<div class="border-2 border-primary p-md relative group hover:bg-surface-container-low transition-colors">
+<div class="absolute -left-2 -top-2 bg-primary text-on-primary font-mono-data text-[10px] px-xs border border-primary z-10">1h ago</div>
+<div class="flex gap-sm items-start mt-xs">
+<span class="material-symbols-outlined text-secondary mt-xs shrink-0" data-icon="warning">warning</span>
+<div>
+<p class="font-bold text-primary leading-tight text-[14px]">Marcus Chen reported high fatigue</p>
+<p class="font-mono-data text-[12px] text-on-surface-variant mt-xs">RPE 9 on accessory work</p>
+<div class="mt-sm flex gap-xs">
+<button class="border border-primary bg-surface-container-lowest text-primary px-sm py-xs font-label-caps text-[10px] hover:bg-primary hover:text-on-primary transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]" data-icon="edit">edit</span> Adjust Plan
+                                        </button>
+<button class="border border-primary bg-surface-container-lowest text-primary px-sm py-xs font-label-caps text-[10px] hover:bg-primary hover:text-on-primary transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]" data-icon="chat">chat</span> Msg
+                                        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Feed Item 3 -->
+<div class="border-2 border-primary p-md relative group hover:bg-surface-container-low transition-colors">
+<div class="absolute -left-2 -top-2 bg-primary text-on-primary font-mono-data text-[10px] px-xs border border-primary z-10">3h ago</div>
+<div class="flex gap-sm items-start mt-xs">
+<span class="material-symbols-outlined text-primary mt-xs shrink-0" data-icon="emoji_events">emoji_events</span>
+<div>
+<p class="font-bold text-primary leading-tight text-[14px]">Elena Rodriguez hit a PR</p>
+<p class="font-mono-data text-[12px] text-on-surface-variant mt-xs">5k Run - 21:45</p>
+<div class="mt-sm flex gap-xs">
+<button class="border border-primary bg-secondary text-on-secondary px-sm py-xs font-label-caps text-[10px] hover:bg-primary transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]" data-icon="thumb_up">thumb_up</span> Send Kudos
+                                        </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-sm border-t-2 border-primary bg-surface-variant text-center shrink-0">
+<a class="font-label-caps text-label-caps text-primary hover:text-secondary uppercase" href="#">View All Activity →</a>
+</div>
+</section>
+</div>
+</div>
+</main>
+</body></html>

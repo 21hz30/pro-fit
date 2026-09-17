@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-surface" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Workout Assignment - Pro-fit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#b3c5ff",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#2a4386",
+                        "on-secondary-container": "#fffbff",
+                        "surface-dim": "#dcd9d9",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-primary-fixed": "#00174a",
+                        "on-secondary-fixed": "#3c0700",
+                        "tertiary": "#131515",
+                        "primary-container": "#002366",
+                        "on-tertiary-container": "#8f9090",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#c5c6d2",
+                        "primary-fixed-dim": "#b3c5ff",
+                        "surface": "#fcf9f8",
+                        "secondary-fixed": "#ffdad2",
+                        "secondary-fixed-dim": "#ffb4a2",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#272929",
+                        "surface-tint": "#435b9f",
+                        "surface-bright": "#fcf9f8",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#af2800",
+                        "surface-container-high": "#eae7e7",
+                        "outline": "#757682",
+                        "inverse-surface": "#313030",
+                        "on-background": "#1c1b1b",
+                        "surface-variant": "#e5e2e1",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#891d00",
+                        "surface-container-highest": "#e5e2e1",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#db3400",
+                        "on-surface": "#1c1b1b",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "on-error-container": "#93000a",
+                        "primary": "#00113a",
+                        "surface-container-low": "#f6f3f2",
+                        "surface-container": "#f0eded",
+                        "on-primary-container": "#758dd5",
+                        "inverse-on-surface": "#f3f0ef",
+                        "on-surface-variant": "#444650",
+                        "primary-fixed": "#dbe1ff",
+                        "background": "#fcf9f8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "border-width": "2px",
+                        "lg": "24px",
+                        "xl": "48px",
+                        "unit": "4px",
+                        "grid-gutter": "24px",
+                        "md": "16px",
+                        "grid-margin": "32px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Space Grotesk"],
+                        "body-lg": ["Space Grotesk"],
+                        "label-caps": ["Space Grotesk"],
+                        "display-lg": ["Space Grotesk"],
+                        "mono-data": ["Space Grotesk"],
+                        "headline-lg-mobile": ["Space Grotesk"],
+                        "headline-md": ["Space Grotesk"],
+                        "headline-lg": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "display-lg": ["72px", { "lineHeight": "1.0", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "mono-data": ["14px", { "lineHeight": "1.0", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "headline-lg": ["40px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Neo-Brutalism Utilities */
+        .border-heavy { border: 2px solid #00113a; }
+        .border-heavy-bottom { border-bottom: 2px solid #00113a; }
+        .shadow-heavy { box-shadow: 4px 4px 0px 0px #00113a; }
+        .shadow-heavy-hover:hover { box-shadow: 6px 6px 0px 0px #00113a; transform: translate(-2px, -2px); }
+        .shadow-heavy-active:active { box-shadow: 2px 2px 0px 0px #00113a; transform: translate(2px, 2px); }
+        .shadow-heavy-secondary { box-shadow: 4px 4px 0px 0px #af2800; }
+        
+        /* Form Element Resets for Neo-Brutalism */
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #af2800 !important;
+            box-shadow: 4px 4px 0px 0px #af2800 !important;
+        }
+    </style>
+</head>
+<body class="h-full bg-surface text-on-surface antialiased flex">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex bg-primary dark:bg-surface-container-highest text-on-primary dark:text-on-surface h-screen w-64 border-r-2 border-primary fixed left-0 top-0 flex-col z-40 transition-all duration-200">
+<!-- Header -->
+<div class="p-lg border-b-2 border-primary">
+<h1 class="font-headline-lg text-headline-lg text-secondary-container">PRO-FIT</h1>
+<p class="font-label-caps text-label-caps text-on-primary mt-sm">Athletic Architecture</p>
+</div>
+<!-- Navigation Links -->
+<ul class="flex-1 py-md overflow-y-auto">
+<li>
+<a class="flex items-center gap-md py-md px-lg text-primary-fixed-dim hover:text-white hover:bg-primary-container transition-all duration-200 hover:-translate-y-1" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps uppercase">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md py-md px-lg bg-secondary text-on-secondary border-2 border-primary -translate-x-1 -translate-y-1 shadow-[4px_4px_0px_0px_#00113a] transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center" data-weight="fill" style="font-variation-settings: 'FILL' 1;">fitness_center</span>
+<span class="font-label-caps text-label-caps uppercase">Workouts</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md py-md px-lg text-primary-fixed-dim hover:text-white hover:bg-primary-container transition-all duration-200 hover:-translate-y-1" href="#">
+<span class="material-symbols-outlined" data-icon="restaurant">restaurant</span>
+<span class="font-label-caps text-label-caps uppercase">Nutrition</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md py-md px-lg text-primary-fixed-dim hover:text-white hover:bg-primary-container transition-all duration-200 hover:-translate-y-1" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-caps text-label-caps uppercase">Clients</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md py-md px-lg text-primary-fixed-dim hover:text-white hover:bg-primary-container transition-all duration-200 hover:-translate-y-1" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-caps text-label-caps uppercase">Schedule</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md py-md px-lg text-primary-fixed-dim hover:text-white hover:bg-primary-container transition-all duration-200 hover:-translate-y-1" href="#">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+<span class="font-label-caps text-label-caps uppercase">Analytics</span>
+</a>
+</li>
+</ul>
+<!-- Footer / CTA -->
+<div class="p-lg border-t-2 border-primary bg-primary-container">
+<button class="w-full bg-secondary text-on-secondary border-heavy py-sm px-md font-label-caps text-label-caps uppercase tracking-wider shadow-heavy shadow-heavy-hover shadow-heavy-active transition-all duration-200 mb-lg">
+                Assign Plan
+            </button>
+<ul class="space-y-sm">
+<li>
+<a class="flex items-center gap-md text-primary-fixed-dim hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+<span class="font-label-caps text-label-caps uppercase">Support</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md text-primary-fixed-dim hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="logout">logout</span>
+<span class="font-label-caps text-label-caps uppercase">Logout</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar (Shared Component - Mobile Only) -->
+<nav class="md:hidden bg-surface dark:bg-surface-dim text-primary dark:text-primary-fixed-dim w-full border-b-2 border-primary flex justify-between items-center px-lg py-sm w-full ml-auto z-30 sticky top-0">
+<div class="font-headline-md text-headline-md text-primary dark:text-inverse-primary uppercase tracking-tighter">Pro-fit</div>
+<div class="flex items-center gap-md">
+<button class="hover:bg-secondary-container hover:text-on-secondary-container p-sm transition-transform duration-100 active:translate-x-1 active:translate-y-1 border-heavy bg-surface-container-lowest">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-secondary-container hover:text-on-secondary-container p-sm transition-transform duration-100 active:translate-x-1 active:translate-y-1 border-heavy bg-surface-container-lowest">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</nav>
+<!-- Canvas -->
+<div class="flex-1 p-md md:p-grid-margin lg:p-xl max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-grid-gutter">
+<!-- Page Header -->
+<div class="col-span-1 lg:col-span-12 mb-lg border-heavy-bottom pb-md flex justify-between items-end flex-wrap gap-md">
+<div>
+<h2 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mb-sm">Workout Assignment</h2>
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary uppercase">Assign Workout Plan to <span class="text-secondary">Michael</span></h1>
+</div>
+<div class="flex gap-md">
+<button class="bg-surface-container-lowest text-primary border-heavy py-sm px-md font-label-caps text-label-caps uppercase shadow-heavy shadow-heavy-hover shadow-heavy-active transition-all duration-200">
+                        Save Draft
+                    </button>
+<button class="bg-secondary text-on-secondary border-heavy py-sm px-md font-label-caps text-label-caps uppercase shadow-heavy shadow-heavy-hover shadow-heavy-active transition-all duration-200 flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">send</span>
+                        Publish Plan
+                    </button>
+</div>
+</div>
+<!-- Left Column: Workout Builder -->
+<div class="col-span-1 lg:col-span-8 flex flex-col gap-lg">
+<!-- Plan Metadata -->
+<section class="bg-surface-container-lowest border-heavy p-lg">
+<div class="bg-primary text-on-primary p-sm -mx-lg -mt-lg mb-lg border-heavy-bottom font-label-caps text-label-caps uppercase">Plan Details</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div class="flex flex-col gap-xs">
+<label class="font-label-caps text-label-caps uppercase text-primary">Plan Name</label>
+<input class="border-heavy p-sm font-body-md bg-surface-container-lowest transition-all duration-200" type="text" value="Hypertrophy Phase 2"/>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-caps text-label-caps uppercase text-primary">Primary Goal</label>
+<select class="border-heavy p-sm font-body-md bg-surface-container-lowest transition-all duration-200 appearance-none">
+<option>Muscle Growth (Hypertrophy)</option>
+<option>Strength</option>
+<option>Endurance</option>
+</select>
+</div>
+<div class="flex flex-col gap-xs md:col-span-2">
+<label class="font-label-caps text-label-caps uppercase text-primary">Coach Notes</label>
+<textarea class="border-heavy p-sm font-body-md bg-surface-container-lowest transition-all duration-200 resize-none" rows="2">Focus on eccentric control for all pressing movements this week.</textarea>
+</div>
+</div>
+</section>
+<!-- Exercise List -->
+<section class="bg-surface-container-lowest border-heavy p-0">
+<div class="bg-primary text-on-primary p-sm border-heavy-bottom font-label-caps text-label-caps uppercase flex justify-between items-center">
+<span>Day 1: Upper Body Power</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-secondary">more_horiz</span>
+</div>
+<div class="p-lg flex flex-col gap-md">
+<!-- Exercise 1 -->
+<div class="border-heavy bg-surface p-md relative group">
+<div class="absolute -left-sm -top-sm bg-secondary text-on-secondary font-mono-data text-mono-data w-6 h-6 flex items-center justify-center border-heavy z-10">A1</div>
+<div class="flex justify-between items-start mb-md pl-sm">
+<h3 class="font-headline-md text-headline-md text-primary uppercase">Barbell Bench Press</h3>
+<button class="text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+<div class="grid grid-cols-4 gap-sm mb-md">
+<div class="border-heavy bg-surface-container-lowest p-xs text-center">
+<span class="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Sets</span>
+<input class="w-full text-center font-mono-data text-mono-data border-none bg-transparent p-0 focus:ring-0" type="number" value="4"/>
+</div>
+<div class="border-heavy bg-surface-container-lowest p-xs text-center">
+<span class="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Reps</span>
+<input class="w-full text-center font-mono-data text-mono-data border-none bg-transparent p-0 focus:ring-0" type="text" value="5"/>
+</div>
+<div class="border-heavy bg-surface-container-lowest p-xs text-center">
+<span class="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Rest</span>
+<input class="w-full text-center font-mono-data text-mono-data border-none bg-transparent p-0 focus:ring-0" type="text" value="120s"/>
+</div>
+<div class="border-heavy bg-surface-container-lowest p-xs text-center">
+<span class="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Target (lbs)</span>
+<input class="w-full text-center font-mono-data text-mono-data border-none bg-transparent p-0 focus:ring-0 text-secondary font-bold" type="text" value="225"/>
+</div>
+</div>
+<input class="w-full border-heavy p-sm font-body-md bg-surface-container-lowest text-sm" placeholder="Instructions (e.g., 3 second negative)..." type="text" value="3 sec negative, explosive concentric"/>
+</div>
+<!-- Exercise 2 -->
+<div class="border-heavy bg-surface p-md relative group">
+<div class="absolute -left-sm -top-sm bg-secondary text-on-secondary font-mono-data text-mono-data w-6 h-6 flex items-center justify-center border-heavy z-10">B1</div>
+<div class="flex justify-between items-start mb-md pl-sm">
+<h3 class="font-headline-md text-headline-md text-primary uppercase">Incline Dumbbell Row</h3>
+<button class="text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+<div class="grid grid-cols-4 gap-sm mb-md">
+<div class="border-heavy bg-surface-container-lowest p-xs text-center">
+<span class="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Sets</span>
+<input class="w-full text-center font-mono-data text-mono-data border-none bg-transparent p-0 focus:ring-0" type="number" value="3"/>
+</div>
+<div class="border-heavy bg-surface-container-lowest p-xs text-center">
+<span class="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Reps</span>
+<input class="w-full text-center font-mono-data text-mono-data border-none bg-transparent p-0 focus:ring-0" type="text" value="8-10"/>
+</div>
+<div class="border-heavy bg-surface-container-lowest p-xs text-center">
+<span class="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Rest</span>
+<input class="w-full text-center font-mono-data text-mono-data border-none bg-transparent p-0 focus:ring-0" type="text" value="90s"/>
+</div>
+<div class="border-heavy bg-surface-container-lowest p-xs text-center">
+<span class="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Target (lbs)</span>
+<input class="w-full text-center font-mono-data text-mono-data border-none bg-transparent p-0 focus:ring-0 text-secondary font-bold" type="text" value="80"/>
+</div>
+</div>
+<input class="w-full border-heavy p-sm font-body-md bg-surface-container-lowest text-sm" placeholder="Instructions (e.g., 3 second negative)..." type="text" value="Squeeze shoulder blades at top."/>
+</div>
+<!-- Add Exercise Button -->
+<button class="border-heavy border-dashed border-primary bg-surface-container-lowest p-md flex items-center justify-center gap-sm text-primary hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">
+<span class="material-symbols-outlined">add</span>
+<span class="font-label-caps text-label-caps uppercase">Add Exercise</span>
+</button>
+</div>
+</section>
+<button class="bg-surface-container-lowest text-primary border-heavy py-md px-lg font-label-caps text-label-caps uppercase shadow-heavy shadow-heavy-hover shadow-heavy-active transition-all duration-200 flex items-center justify-center gap-sm w-full md:w-auto self-start">
+<span class="material-symbols-outlined">add_circle</span>
+                    Add Workout Day
+                </button>
+</div>
+<!-- Right Column: Calendar / Scheduling (Bento Style) -->
+<div class="col-span-1 lg:col-span-4 flex flex-col gap-lg">
+<!-- Client Card -->
+<div class="bg-primary text-on-primary border-heavy p-md relative overflow-hidden group">
+<div class="absolute -right-12 -bottom-12 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined text-[120px]">person</span>
+</div>
+<div class="flex items-center gap-md relative z-10">
+<img class="w-16 h-16 border-heavy rounded-none object-cover grayscale" data-alt="A striking portrait of a male athlete, high-contrast, black and white with neon orange lighting accents, intense expression, minimalist studio background, neo-brutalist aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3jytCCyZ2-n4DtwMBPZxnQc64q2UUggsHBcAkvojhQizMzWmQQWeY55cUgvWBn-bo7UY6E0OFcnQE-z8p9ZooOHzIRe8OTr-ymENCENVl-9hnEM_ptLy-hxCE33m-4L73vqWShRzb1k1zQ6S_neutyprqmqN4W-tKQ7GK6yDyzqmlpqMrGSFArGQC7tDiPjLToEhWeSHyQJ1Pn9B1RJeZ8HmkmynCoLUPAlYdOWxBNor1naeFx7xL"/>
+<div>
+<h3 class="font-headline-md text-headline-md uppercase">Michael T.</h3>
+<div class="flex items-center gap-xs mt-xs">
+<span class="bg-secondary text-on-secondary text-[10px] uppercase font-bold px-1 border border-secondary">Active</span>
+<span class="font-label-caps text-label-caps text-primary-fixed-dim">Wk 3 / Phase 2</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Calendar Widget -->
+<div class="bg-surface-container-lowest border-heavy p-0 flex flex-col h-full min-h-[400px]">
+<div class="bg-primary text-on-primary p-sm border-heavy-bottom font-label-caps text-label-caps uppercase flex justify-between items-center">
+<span>Schedule</span>
+<div class="flex gap-xs">
+<span class="material-symbols-outlined cursor-pointer hover:text-secondary text-[18px]">chevron_left</span>
+<span class="font-mono-data text-mono-data">OCT 2023</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-secondary text-[18px]">chevron_right</span>
+</div>
+</div>
+<div class="p-sm flex-1 flex flex-col">
+<!-- Days Header -->
+<div class="grid grid-cols-7 gap-xs mb-sm">
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant">S</div>
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant">M</div>
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant">T</div>
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant">W</div>
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant">T</div>
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant">F</div>
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant">S</div>
+</div>
+<!-- Grid (Simplified for UI representation) -->
+<div class="grid grid-cols-7 gap-xs flex-1 auto-rows-fr">
+<!-- Empty days -->
+<div class="border border-outline-variant/30 p-1"></div>
+<div class="border border-outline-variant/30 p-1"></div>
+<!-- Active days -->
+<div class="border-heavy bg-surface p-1 relative flex flex-col items-center justify-start cursor-pointer hover:bg-surface-variant transition-colors">
+<span class="font-mono-data text-mono-data text-[12px]">1</span>
+</div>
+<div class="border-heavy bg-secondary p-1 relative flex flex-col items-center justify-start cursor-pointer text-on-secondary shadow-heavy-secondary -translate-y-[2px] -translate-x-[2px]">
+<span class="font-mono-data text-mono-data text-[12px]">2</span>
+<div class="w-full h-1 bg-on-secondary mt-1"></div>
+</div>
+<div class="border-heavy bg-surface p-1 relative flex flex-col items-center justify-start cursor-pointer hover:bg-surface-variant transition-colors">
+<span class="font-mono-data text-mono-data text-[12px]">3</span>
+</div>
+<div class="border-heavy bg-primary-container p-1 relative flex flex-col items-center justify-start cursor-pointer text-on-primary-container">
+<span class="font-mono-data text-mono-data text-[12px]">4</span>
+<div class="w-2 h-2 rounded-full bg-secondary mt-1"></div>
+</div>
+<div class="border-heavy bg-surface p-1 relative flex flex-col items-center justify-start cursor-pointer hover:bg-surface-variant transition-colors">
+<span class="font-mono-data text-mono-data text-[12px]">5</span>
+</div>
+<div class="border-heavy bg-surface p-1 relative flex flex-col items-center justify-start cursor-pointer hover:bg-surface-variant transition-colors">
+<span class="font-mono-data text-mono-data text-[12px]">6</span>
+</div>
+<div class="border-heavy bg-surface p-1 relative flex flex-col items-center justify-start cursor-pointer hover:bg-surface-variant transition-colors">
+<span class="font-mono-data text-mono-data text-[12px]">7</span>
+</div>
+<div class="border-heavy bg-surface p-1 relative flex flex-col items-center justify-start cursor-pointer hover:bg-surface-variant transition-colors">
+<span class="font-mono-data text-mono-data text-[12px]">8</span>
+</div>
+<div class="border-heavy bg-primary-container p-1 relative flex flex-col items-center justify-start cursor-pointer text-on-primary-container">
+<span class="font-mono-data text-mono-data text-[12px]">9</span>
+<div class="w-2 h-2 rounded-full bg-secondary mt-1"></div>
+</div>
+<div class="border-heavy bg-surface p-1 relative flex flex-col items-center justify-start cursor-pointer hover:bg-surface-variant transition-colors">
+<span class="font-mono-data text-mono-data text-[12px]">10</span>
+</div>
+<!-- Fill remainder with simple boxes for visual weight -->
+<div class="border border-outline-variant/30 p-1"></div><div class="border border-outline-variant/30 p-1"></div><div class="border border-outline-variant/30 p-1"></div><div class="border border-outline-variant/30 p-1"></div>
+<div class="border border-outline-variant/30 p-1"></div><div class="border border-outline-variant/30 p-1"></div><div class="border border-outline-variant/30 p-1"></div><div class="border border-outline-variant/30 p-1"></div><div class="border border-outline-variant/30 p-1"></div><div class="border border-outline-variant/30 p-1"></div><div class="border border-outline-variant/30 p-1"></div>
+<div class="border border-outline-variant/30 p-1"></div><div class="border border-outline-variant/30 p-1"></div><div class="border border-outline-variant/30 p-1"></div><div class="border border-outline-variant/30 p-1"></div>
+</div>
+</div>
+<div class="p-sm border-t-2 border-primary bg-surface-variant flex flex-col gap-xs">
+<p class="font-label-caps text-label-caps uppercase text-primary mb-xs">Selected Date: Oct 2</p>
+<div class="flex items-center gap-sm">
+<div class="w-4 h-4 bg-secondary border border-primary"></div>
+<span class="font-mono-data text-mono-data text-xs">Day 1: Upper Body Power</span>
+</div>
+<div class="flex items-center gap-sm mt-1">
+<p class="text-xs text-on-surface-variant italic">Drag workout days to schedule.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

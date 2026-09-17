@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Assign Diet Plan</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#b3c5ff",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#2a4386",
+                        "on-secondary-container": "#fffbff",
+                        "surface-dim": "#dcd9d9",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-primary-fixed": "#00174a",
+                        "on-secondary-fixed": "#3c0700",
+                        "tertiary": "#131515",
+                        "primary-container": "#002366",
+                        "on-tertiary-container": "#8f9090",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#c5c6d2",
+                        "primary-fixed-dim": "#b3c5ff",
+                        "surface": "#fcf9f8",
+                        "secondary-fixed": "#ffdad2",
+                        "secondary-fixed-dim": "#ffb4a2",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#272929",
+                        "surface-tint": "#435b9f",
+                        "surface-bright": "#fcf9f8",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#af2800",
+                        "surface-container-high": "#eae7e7",
+                        "outline": "#757682",
+                        "inverse-surface": "#313030",
+                        "on-background": "#1c1b1b",
+                        "surface-variant": "#e5e2e1",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#891d00",
+                        "surface-container-highest": "#e5e2e1",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#db3400",
+                        "on-surface": "#1c1b1b",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "on-error-container": "#93000a",
+                        "primary": "#00113a",
+                        "surface-container-low": "#f6f3f2",
+                        "surface-container": "#f0eded",
+                        "on-primary-container": "#758dd5",
+                        "inverse-on-surface": "#f3f0ef",
+                        "on-surface-variant": "#444650",
+                        "primary-fixed": "#dbe1ff",
+                        "background": "#fcf9f8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "border-width": "2px",
+                        "lg": "24px",
+                        "xl": "48px",
+                        "unit": "4px",
+                        "grid-gutter": "24px",
+                        "md": "16px",
+                        "grid-margin": "32px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Space Grotesk", "sans-serif"],
+                        "body-lg": ["Space Grotesk", "sans-serif"],
+                        "label-caps": ["Space Grotesk", "sans-serif"],
+                        "display-lg": ["Space Grotesk", "sans-serif"],
+                        "mono-data": ["Space Grotesk", "sans-serif"],
+                        "headline-lg-mobile": ["Space Grotesk", "sans-serif"],
+                        "headline-md": ["Space Grotesk", "sans-serif"],
+                        "headline-lg": ["Space Grotesk", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "display-lg": ["72px", { "lineHeight": "1.0", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "mono-data": ["14px", { "lineHeight": "1.0", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "headline-lg": ["40px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Space Grotesk', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col md:flex-row">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col z-40 bg-primary dark:bg-surface-container-highest text-on-primary dark:text-on-surface h-screen w-64 border-r-2 border-primary fixed left-0 top-0">
+<div class="p-lg">
+<h1 class="font-headline-lg text-headline-lg text-secondary-container">PRO-FIT</h1>
+<p class="font-label-caps text-label-caps text-on-primary mt-sm">Athletic Architecture</p>
+</div>
+<ul class="flex-1 mt-lg flex flex-col gap-sm">
+<li>
+<a class="flex items-center gap-md py-md px-lg text-primary-fixed-dim hover:text-white hover:bg-primary-container transition-all duration-200 hover:-translate-y-1 font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md py-md px-lg text-primary-fixed-dim hover:text-white hover:bg-primary-container transition-all duration-200 hover:-translate-y-1 font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">fitness_center</span>
+                    Workouts
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md py-md px-lg bg-secondary text-on-secondary border-2 border-primary -translate-x-1 -translate-y-1 shadow-[4px_4px_0px_0px_#00113a] font-label-caps text-label-caps transition-all duration-200" href="#">
+<span class="material-symbols-outlined">restaurant</span>
+                    Nutrition
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md py-md px-lg text-primary-fixed-dim hover:text-white hover:bg-primary-container transition-all duration-200 hover:-translate-y-1 font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">group</span>
+                    Clients
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md py-md px-lg text-primary-fixed-dim hover:text-white hover:bg-primary-container transition-all duration-200 hover:-translate-y-1 font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+                    Schedule
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md py-md px-lg text-primary-fixed-dim hover:text-white hover:bg-primary-container transition-all duration-200 hover:-translate-y-1 font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+                    Analytics
+                </a>
+</li>
+</ul>
+<div class="p-lg flex flex-col gap-md">
+<button class="w-full bg-secondary-container text-on-secondary-container py-sm border-2 border-primary font-label-caps text-label-caps uppercase hover:-translate-y-1 hover:-translate-x-1 shadow-[4px_4px_0px_0px_#00113a] transition-all duration-200">Assign Plan</button>
+<ul class="flex flex-col gap-sm">
+<li>
+<a class="flex items-center gap-md py-sm text-primary-fixed-dim hover:text-white font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">help</span> Support
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-md py-sm text-primary-fixed-dim hover:text-white font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">logout</span> Logout
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 md:ml-64 p-lg md:p-xl">
+<header class="mb-xl">
+<h2 class="font-headline-lg text-headline-lg text-primary border-b-2 border-primary pb-sm inline-block">Assign Diet Plan to Michael</h2>
+</header>
+<form class="grid grid-cols-1 md:grid-cols-12 gap-xl">
+<!-- Targets Section -->
+<section class="md:col-span-4 bg-surface-container-lowest border-2 border-primary p-lg">
+<div class="bg-primary text-on-primary py-xs px-sm mb-lg border-2 border-primary -mx-lg -mt-lg border-b-primary inline-block font-label-caps text-label-caps">
+                    DAILY TARGETS
+                </div>
+<div class="flex flex-col gap-lg">
+<div>
+<label class="block font-label-caps text-label-caps uppercase mb-xs">Calories (kcal)</label>
+<input class="w-full bg-surface-container-lowest border-2 border-primary p-sm font-mono-data text-mono-data focus:border-secondary-container focus:ring-0 transition-colors" type="number" value="2500"/>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps uppercase mb-xs">Protein (g)</label>
+<input class="w-full bg-surface-container-lowest border-2 border-primary p-sm font-mono-data text-mono-data focus:border-secondary-container focus:ring-0 transition-colors" type="number" value="180"/>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps uppercase mb-xs">Carbs (g)</label>
+<input class="w-full bg-surface-container-lowest border-2 border-primary p-sm font-mono-data text-mono-data focus:border-secondary-container focus:ring-0 transition-colors" type="number" value="250"/>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps uppercase mb-xs">Fats (g)</label>
+<input class="w-full bg-surface-container-lowest border-2 border-primary p-sm font-mono-data text-mono-data focus:border-secondary-container focus:ring-0 transition-colors" type="number" value="85"/>
+</div>
+</div>
+</section>
+<!-- Meals Section -->
+<section class="md:col-span-8 flex flex-col gap-lg">
+<!-- Breakfast -->
+<div class="bg-surface-container-lowest border-2 border-primary">
+<div class="bg-primary text-on-primary py-xs px-sm font-label-caps text-label-caps border-b-2 border-primary flex justify-between items-center">
+<span>BREAKFAST</span>
+<span class="material-symbols-outlined text-sm">add</span>
+</div>
+<div class="p-lg">
+<textarea class="w-full bg-surface-container-lowest border-2 border-primary p-sm font-body-md text-body-md focus:border-secondary-container focus:ring-0 transition-colors min-h-[100px]" placeholder="Enter meal details..."></textarea>
+</div>
+</div>
+<!-- Lunch -->
+<div class="bg-surface-container-lowest border-2 border-primary">
+<div class="bg-primary text-on-primary py-xs px-sm font-label-caps text-label-caps border-b-2 border-primary flex justify-between items-center">
+<span>LUNCH</span>
+<span class="material-symbols-outlined text-sm">add</span>
+</div>
+<div class="p-lg">
+<textarea class="w-full bg-surface-container-lowest border-2 border-primary p-sm font-body-md text-body-md focus:border-secondary-container focus:ring-0 transition-colors min-h-[100px]" placeholder="Enter meal details..."></textarea>
+</div>
+</div>
+<!-- Dinner -->
+<div class="bg-surface-container-lowest border-2 border-primary">
+<div class="bg-primary text-on-primary py-xs px-sm font-label-caps text-label-caps border-b-2 border-primary flex justify-between items-center">
+<span>DINNER</span>
+<span class="material-symbols-outlined text-sm">add</span>
+</div>
+<div class="p-lg">
+<textarea class="w-full bg-surface-container-lowest border-2 border-primary p-sm font-body-md text-body-md focus:border-secondary-container focus:ring-0 transition-colors min-h-[100px]" placeholder="Enter meal details..."></textarea>
+</div>
+</div>
+<!-- Snacks -->
+<div class="bg-surface-container-lowest border-2 border-primary">
+<div class="bg-primary text-on-primary py-xs px-sm font-label-caps text-label-caps border-b-2 border-primary flex justify-between items-center">
+<span>SNACKS</span>
+<span class="material-symbols-outlined text-sm">add</span>
+</div>
+<div class="p-lg">
+<textarea class="w-full bg-surface-container-lowest border-2 border-primary p-sm font-body-md text-body-md focus:border-secondary-container focus:ring-0 transition-colors min-h-[100px]" placeholder="Enter meal details..."></textarea>
+</div>
+</div>
+<!-- Feedback Section -->
+<div class="bg-surface-container-lowest border-2 border-primary mt-lg">
+<div class="bg-primary text-on-primary py-xs px-sm font-label-caps text-label-caps border-b-2 border-primary">
+                        FEEDBACK &amp; TIPS
+                    </div>
+<div class="p-lg">
+<textarea class="w-full bg-surface-container-lowest border-2 border-primary p-sm font-body-md text-body-md focus:border-secondary-container focus:ring-0 transition-colors min-h-[120px]" placeholder="Add specific instructions, hydration goals, or motivation..."></textarea>
+</div>
+</div>
+<!-- Action -->
+<div class="flex justify-end mt-lg">
+<button class="bg-secondary-container text-on-secondary-container border-2 border-primary py-sm px-xl font-label-caps text-label-caps uppercase hover:-translate-x-1 hover:-translate-y-1 shadow-[4px_4px_0px_0px_#00113a] transition-all duration-200" type="button">
+                        Publish Plan
+                    </button>
+</div>
+</section>
+</form>
+</main>
+</body></html>
