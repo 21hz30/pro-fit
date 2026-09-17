@@ -234,3 +234,46 @@ export async function submitCoachFeedback(client, dailyCheckinId, feedbackConten
   );
   return { feedback, checkin };
 }
+
+// NEW: Get trainee's check-in history (past 30 days)
+export async function getTraineeCheckinHistory(client, startDate, endDate) {
+  if (client?.isLocal) return client.operations.getActivityHistory?.(startDate, endDate) || [];
+  const user = await requireUser(client);
+
+  const checkins = assertResult(
+    await client
+      .from('daily_checkins')
+      .select('daily_checkin_id, checkin_date, status, trainee_notes, submitted_at, reviewed_at')
+      .eq('trainee_id', user.id)
+      .gte('checkin_date', startDate)
+      .lte('checkin_date', endDate)
+      .order('checkin_date', { ascending: false }),
+    'Unable to load check-in history.',
+  ) || [];
+
+  if (!checkins.length) return [];
+
+  const ids = checkins.map((c) => c.daily_checkin_id);
+  const [workouts, feedback] = await Promise.all([
+    client.from('workout_checkins').select('daily_checkin_id, status, actual_duration_minutes').in('daily_checkin_id', ids),
+    client.from('coach_feedback').select('daily_checkin_id, feedback_content').in('daily_checkin_id', ids),
+  ]);
+
+  const workoutMap = new Map();
+  (assertResult(workouts, '') || []).forEach((w) => {
+    if (!workoutMap.has(w.daily_checkin_id)) workoutMap.set(w.daily_checkin_id, []);
+    workoutMap.get(w.daily_checkin_id).push(w);
+  });
+
+  const feedbackMap = new Map();
+  (assertResult(feedback, '') || []).forEach((f) => {
+    if (!feedbackMap.has(f.daily_checkin_id)) feedbackMap.set(f.daily_checkin_id, []);
+    feedbackMap.get(f.daily_checkin_id).push(f);
+  });
+
+  return checkins.map((c) => ({
+    ...c,
+    workouts: workoutMap.get(c.daily_checkin_id) || [],
+    feedback: feedbackMap.get(c.daily_checkin_id) || [],
+  }));
+}

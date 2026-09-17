@@ -79,9 +79,9 @@ export async function getTraineeWorkout(client, date) {
   const items = assertResult(
     await client
       .from('workout_items')
-      .select('workout_item_id, workout_day_id, exercise_id, sort_order, sets, reps_min, reps_max, target_weight, weight_unit, duration_seconds, rest_seconds, instructions, exercise:exercises(exercise_id, exercise_name, description, equipment)')
+      .select('workout_item_id, workout_day_id, exercise_id, sort_order, sets, reps_min, reps_max, target_weight, weight_unit, duration_seconds, rest_seconds, instructions, exercise:exercises(exercise_id, exercise_name, description, equipment, video_url)')
       .in('workout_day_id', days.map((day) => day.workout_day_id))
-      .order('sort_order', { ascending: true }),
+      .order('sort_order', { ascending: true}),
     'Unable to load exercises.',
   ) || [];
 
@@ -95,13 +95,65 @@ export async function getTraineeWorkout(client, date) {
   };
 }
 
+// NEW: Get trainee's weekly workout overview
+export async function getTraineeWeeklyPlan(client, startDate, endDate) {
+  if (client?.isLocal) return client.operations.getTraineeWeek?.(startDate, endDate) || [];
+  const user = await requireUser(client);
+
+  const plans = assertResult(
+    await client
+      .from('workout_plans')
+      .select('workout_plan_id, plan_name, start_date, end_date')
+      .eq('trainee_id', user.id)
+      .in('status', ['published', 'archived'])
+      .lte('start_date', endDate)
+      .gte('end_date', startDate),
+    'Unable to load weekly workout plans.',
+  ) || [];
+
+  if (!plans.length) return [];
+
+  const days = assertResult(
+    await client
+      .from('workout_days')
+      .select('workout_day_id, workout_plan_id, scheduled_date, title, estimated_duration_minutes')
+      .in('workout_plan_id', plans.map((p) => p.workout_plan_id))
+      .gte('scheduled_date', startDate)
+      .lte('scheduled_date', endDate)
+      .order('scheduled_date', { ascending: true }),
+    'Unable to load weekly workouts.',
+  ) || [];
+
+  return days.map((day) => ({
+    ...day,
+    plan: plans.find((p) => p.workout_plan_id === day.workout_plan_id),
+  }));
+}
+
+// NEW: Get trainee's all workout plans (for history view)
+export async function getTraineeAllPlans(client) {
+  if (client?.isLocal) return [];
+  const user = await requireUser(client);
+
+  return assertResult(
+    await client
+      .from('workout_plans')
+      .select('workout_plan_id, plan_name, goal, start_date, end_date, status, published_at')
+      .eq('trainee_id', user.id)
+      .in('status', ['published', 'archived'])
+      .order('start_date', { ascending: false })
+      .limit(20),
+    'Unable to load workout history.',
+  ) || [];
+}
+
 export async function getCoachExercises(client) {
   if (client?.isLocal) return client.operations.getCoachExercises();
   await requireUser(client);
   return assertResult(
     await client
       .from('exercises')
-      .select('exercise_id, exercise_name, description, equipment, created_by')
+      .select('exercise_id, exercise_name, description, equipment, video_url, created_by')
       .eq('is_active', true)
       .order('exercise_name', { ascending: true }),
     'Unable to load the exercise library.',
@@ -167,78 +219,143 @@ async function bestEffortDeletePlan(client, workoutPlanId) {
     await deletePlanChildren(client, workoutPlanId);
     await client.from('workout_plans').delete().eq('workout_plan_id', workoutPlanId);
   } catch {
-    // Preserve the primary error; an incomplete plan remains draft and invisible to trainees.
+    // Expected: a day was logged
   }
 }
 
-export async function saveWorkoutPlan(client, input, { publish = false } = {}) {
+export async function saveDraft(client, input) {
+  if (client?.isLocal) return client.operations.saveDraft(input);
   validatePlanInput(input);
-  if (client?.isLocal) return client.operations.saveWorkoutPlan(input, { publish });
   const user = await requireUser(client);
-  let workoutPlanId = input.workoutPlanId || null;
-  let createdNow = false;
+  const existing = input.workoutPlanId ? assertResult(await client.from('workout_plans').select('workout_plan_id, status, trainee_id').eq('workout_plan_id', input.workoutPlanId).eq('coach_id', user.id).eq('status', 'draft').maybeSingle(), 'Unable to check if the draft still exists.') : null;
+  if (input.workoutPlanId && !existing) throw new AppServiceError('This draft no longer exists or is no longer editable.', { code: 'NOT_FOUND' });
+  const workoutPlanId = existing?.workout_plan_id || null;
 
-  const planRecord = {
-    coach_id: user.id,
-    trainee_id: input.traineeId,
-    plan_name: input.planName.trim(),
-    goal: input.goal?.trim() || null,
-    coach_notes: input.coachNotes?.trim() || null,
-    start_date: input.startDate,
-    end_date: input.endDate,
-    status: 'draft',
-    published_at: null,
-  };
-
-  try {
-    if (workoutPlanId) {
-      const updated = assertResult(
-        await client.from('workout_plans').update(planRecord).eq('workout_plan_id', workoutPlanId).select('workout_plan_id').single(),
-        'Unable to update the workout draft.',
-      );
-      workoutPlanId = updated.workout_plan_id;
-      await deletePlanChildren(client, workoutPlanId);
-    } else {
-      const created = assertResult(
-        await client.from('workout_plans').insert(planRecord).select('workout_plan_id').single(),
-        'Unable to create the workout draft.',
-      );
-      workoutPlanId = created.workout_plan_id;
-      createdNow = true;
+  for (const day of input.days) {
+    for (const item of day.items) {
+      if (item.newExerciseName && !item.exerciseId) item.exerciseId = await createExercise(client, user.id, item);
     }
-
-    for (let dayIndex = 0; dayIndex < input.days.length; dayIndex += 1) {
-      const day = input.days[dayIndex];
-      const dayRecord = assertResult(
-        await client.from('workout_days').insert({
-          workout_plan_id: workoutPlanId,
-          scheduled_date: day.scheduledDate,
-          day_number: dayIndex + 1,
-          title: day.title.trim(),
-          estimated_duration_minutes: asNumberOrNull(day.estimatedDurationMinutes),
-          sort_order: dayIndex + 1,
-        }).select('workout_day_id').single(),
-        'Unable to create the training day.',
-      );
-
-      const itemRecords = [];
-      for (let itemIndex = 0; itemIndex < day.items.length; itemIndex += 1) {
-        const item = day.items[itemIndex];
-        const exerciseId = item.exerciseId || await createExercise(client, user.id, item);
-        itemRecords.push(normalizeWorkoutItem({ ...item, exerciseId }, dayRecord.workout_day_id, itemIndex + 1));
-      }
-      assertResult(await client.from('workout_items').insert(itemRecords), 'Unable to save workout items.');
-    }
-
-    if (publish) {
-      assertResult(
-        await client.from('workout_plans').update({ status: 'published', published_at: new Date().toISOString() }).eq('workout_plan_id', workoutPlanId).select('workout_plan_id').single(),
-        'Unable to publish the workout plan.',
-      );
-    }
-    return { workoutPlanId, status: publish ? 'published' : 'draft' };
-  } catch (error) {
-    if (createdNow && workoutPlanId) await bestEffortDeletePlan(client, workoutPlanId);
-    throw error;
   }
+
+  if (workoutPlanId) {
+    await deletePlanChildren(client, workoutPlanId);
+    assertResult(
+      await client.from('workout_plans').update({
+        trainee_id: input.traineeId,
+        plan_name: input.planName.trim(),
+        goal: input.goal?.trim() || null,
+        coach_notes: input.coachNotes?.trim() || null,
+        start_date: input.startDate,
+        end_date: input.endDate,
+        updated_at: new Date().toISOString(),
+      }).eq('workout_plan_id', workoutPlanId),
+      'Unable to update the draft.',
+    );
+  } else {
+    const plan = assertResult(
+      await client.from('workout_plans').insert({
+        coach_id: user.id,
+        trainee_id: input.traineeId,
+        plan_name: input.planName.trim(),
+        goal: input.goal?.trim() || null,
+        coach_notes: input.coachNotes?.trim() || null,
+        start_date: input.startDate,
+        end_date: input.endDate,
+        status: 'draft',
+      }).select('workout_plan_id').single(),
+      'Unable to create the draft.',
+    );
+    input.workoutPlanId = plan.workout_plan_id;
+  }
+
+  for (const day of input.days) {
+    const dayData = assertResult(
+      await client.from('workout_days').insert({
+        workout_plan_id: input.workoutPlanId,
+        scheduled_date: day.scheduledDate,
+        day_number: asNumberOrNull(day.dayNumber),
+        title: day.title.trim(),
+        estimated_duration_minutes: asNumberOrNull(day.estimatedDurationMinutes),
+        sort_order: day.sortOrder ?? 1,
+      }).select('workout_day_id').single(),
+      'Unable to save a training day.',
+    );
+    const dayId = dayData.workout_day_id;
+    if (day.items.length) {
+      assertResult(
+        await client.from('workout_items').insert(day.items.map((item, index) => normalizeWorkoutItem(item, dayId, index + 1))),
+        'Unable to save workout items.',
+      );
+    }
+  }
+
+  return { workoutPlanId: input.workoutPlanId };
+}
+
+export async function publishDraft(client, workoutPlanId) {
+  if (client?.isLocal) return client.operations.publishDraft(workoutPlanId);
+  const user = await requireUser(client);
+  const existing = assertResult(
+    await client.from('workout_plans').select('workout_plan_id, status').eq('workout_plan_id', workoutPlanId).eq('coach_id', user.id).eq('status', 'draft').maybeSingle(),
+    'Unable to check if the draft still exists.',
+  );
+  if (!existing) throw new AppServiceError('This draft no longer exists or was already published.', { code: 'NOT_FOUND' });
+  assertResult(
+    await client.from('workout_plans').update({ status: 'published', published_at: new Date().toISOString() }).eq('workout_plan_id', workoutPlanId),
+    'Unable to publish the workout plan.',
+  );
+}
+
+export async function deleteDraft(client, workoutPlanId) {
+  if (client?.isLocal) return client.operations.deleteDraft(workoutPlanId);
+  const user = await requireUser(client);
+  const existing = assertResult(
+    await client.from('workout_plans').select('workout_plan_id, status').eq('workout_plan_id', workoutPlanId).eq('coach_id', user.id).eq('status', 'draft').maybeSingle(),
+    'Unable to check if the draft still exists.',
+  );
+  if (!existing) return;
+  await bestEffortDeletePlan(client, workoutPlanId);
+}
+
+export async function getCoachDraft(client, workoutPlanId) {
+  if (client?.isLocal) return client.operations.getCoachDraft(workoutPlanId);
+  const user = await requireUser(client);
+  const plan = assertResult(
+    await client
+      .from('workout_plans')
+      .select('workout_plan_id, trainee_id, plan_name, goal, coach_notes, start_date, end_date, status')
+      .eq('workout_plan_id', workoutPlanId)
+      .eq('coach_id', user.id)
+      .eq('status', 'draft')
+      .maybeSingle(),
+    'Unable to load the draft.',
+  );
+  if (!plan) throw new AppServiceError('This draft no longer exists or is no longer editable.', { code: 'NOT_FOUND' });
+
+  const days = assertResult(
+    await client
+      .from('workout_days')
+      .select('workout_day_id, scheduled_date, day_number, title, estimated_duration_minutes, sort_order')
+      .eq('workout_plan_id', workoutPlanId)
+      .order('sort_order', { ascending: true }),
+    'Unable to load training days.',
+  ) || [];
+
+  const items = days.length ? assertResult(
+    await client
+      .from('workout_items')
+      .select('workout_item_id, workout_day_id, exercise_id, sort_order, sets, reps_min, reps_max, target_weight, weight_unit, duration_seconds, rest_seconds, instructions, exercise:exercises(exercise_id, exercise_name, description, equipment, video_url)')
+      .in('workout_day_id', days.map((day) => day.workout_day_id))
+      .order('workout_day_id', { ascending: true })
+      .order('sort_order', { ascending: true }),
+    'Unable to load workout items.',
+  ) : [];
+
+  return {
+    ...plan,
+    days: days.map((day) => ({
+      ...day,
+      items: (items || []).filter((item) => item.workout_day_id === day.workout_day_id),
+    })),
+  };
 }
