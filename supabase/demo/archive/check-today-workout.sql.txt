@@ -1,0 +1,27 @@
+-- Check if today has a workout for Michael
+SELECT
+  CURRENT_DATE as today,
+  COUNT(*) as workouts_today
+FROM workout_days wd
+JOIN workout_plans wp ON wp.workout_plan_id = wd.workout_plan_id
+WHERE wp.trainee_id = (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app')
+  AND wd.scheduled_date = CURRENT_DATE;
+
+-- Check what date ranges the workout plans cover
+SELECT
+  MIN(start_date) as earliest_plan,
+  MAX(end_date) as latest_plan,
+  CURRENT_DATE as today
+FROM workout_plans
+WHERE trainee_id = (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app');
+
+-- Show the most recent workout days
+SELECT
+  wd.scheduled_date,
+  wd.title,
+  wp.plan_name
+FROM workout_days wd
+JOIN workout_plans wp ON wp.workout_plan_id = wd.workout_plan_id
+WHERE wp.trainee_id = (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app')
+ORDER BY wd.scheduled_date DESC
+LIMIT 10;

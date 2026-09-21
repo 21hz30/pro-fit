@@ -67,3 +67,36 @@ test('meal photo validation rejects unsafe type and oversized files', () => {
   assert.doesNotThrow(() => validateMealPhoto({ type: 'image/webp', size: 1024 }));
 });
 
+
+test('cloud plan publishes only after all children save; a failed save stays draft', async () => {
+  const { saveWorkoutPlan } = await import('../src/services/workoutService.js');
+  const { createBasketballWeek } = await import('../src/domain/training.js');
+  for (const failItems of [false,true]) {
+    const events = [];
+    const client = {
+      auth: {getUser: async () => ({data:{user:{id:'coach'}}})},
+      from(table) {
+        let action = 'select'; let payload;
+        const query = new Proxy({}, {get(_target,property) {
+          if (property === 'then') {
+            events.push({table,action,payload});
+            let result = {data: table === 'workout_plans' ? {workout_plan_id:42,status:'draft'} : table === 'workout_days' ? {workout_day_id:43} : []};
+            if (table === 'workout_items' && failItems) result = {error:{message:'Child write failed'}};
+            return Promise.resolve(result).then.bind(Promise.resolve(result));
+          }
+          return (...args) => { if (['insert','update','delete'].includes(property)) {action=property;payload=args[0];} return query; };
+        }});
+        return query;
+      },
+    };
+    const input = createBasketballWeek('2026-09-21','trainee');
+    input.days = input.days.slice(0,1);
+    input.days[0].items = [{exerciseId:1,sets:3,repsMin:8,repsMax:10}];
+    if (failItems) await assert.rejects(() => saveWorkoutPlan(client,input,{publish:true}), /Child write failed/);
+    else await saveWorkoutPlan(client,input,{publish:true});
+    assert.equal(events.find((e) => e.table === 'workout_plans' && e.action === 'insert').payload.status,'draft');
+    const publishIndex = events.findIndex((e) => e.table === 'workout_plans' && e.action === 'update' && e.payload.status === 'published');
+    if (failItems) assert.equal(publishIndex,-1);
+    else assert.ok(publishIndex > events.findIndex((e) => e.table === 'workout_items' && e.action === 'insert'));
+  }
+});

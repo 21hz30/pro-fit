@@ -1,0 +1,7 @@
+-- Simple count check
+SELECT 'Workout Plans' as table_name, COUNT(*) as count FROM workout_plans;
+SELECT 'Workout Days' as table_name, COUNT(*) as count FROM workout_days;
+SELECT 'Check-ins' as table_name, COUNT(*) as count FROM daily_checkins;
+SELECT 'Diet Plans' as table_name, COUNT(*) as count FROM diet_plans;
+SELECT 'Exercises' as table_name, COUNT(*) as count FROM exercises;
+SELECT 'Coach-Trainee Links' as table_name, COUNT(*) as count FROM coach_trainees;

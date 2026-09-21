@@ -1,3 +1,5 @@
+> Status (2026-09-20): Recovery metrics and My Day persistence are available in local mode only. Cloud core data reloads after actions; there is no realtime subscription. Sample history is fictional. Use README.md and supabase/demo/README.md for current setup; treat the presentation below as talking points, not acceptance results.
+
 # Pro-fit Demo Guide
 
 ## Overview
@@ -199,9 +201,9 @@ Daily meal suggestions:
 - **Video Integration**: YouTube embedded links
 
 ### Data Structure
-- **15 tables**: profiles, exercises, workout_plans, workout_days, workout_items, daily_checkins, workout_checkins, diet_plans, diet_meals, diet_logs, coach_feedback, coach_trainees
+- **12 business tables**: profiles, exercises, workout_plans, workout_days, workout_items, daily_checkins, workout_checkins, diet_plans, diet_meals, diet_logs, coach_feedback, coach_trainees
 - **Row Level Security (RLS)**: Athletes only see their data, coaches see their assigned athletes
-- **Real-time updates**: Changes sync across sessions
+- **Real-time updates**: Saved changes appear on the next load; no realtime subscription
 
 ### Demo Data Quality
 - **Realistic patterns**: Check-ins show varied sleep, some fatigue from exams

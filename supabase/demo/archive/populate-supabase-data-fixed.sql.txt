@@ -1,0 +1,270 @@
+-- Populate Supabase with sample data for demo accounts
+-- Run this in Supabase SQL Editor
+-- Make sure demo-coach@pro-fit.app and demo-athlete@pro-fit.app accounts exist first
+
+DO $$
+DECLARE
+  v_coach_id UUID;
+  v_trainee_id UUID;
+  v_plan_id BIGINT;
+  v_day_id BIGINT;
+  v_checkin_id BIGINT;
+  v_diet_plan_id BIGINT;
+  v_exercise_ids BIGINT[];
+  v_date DATE;
+  v_week_start DATE;
+  v_today DATE := CURRENT_DATE;
+BEGIN
+  -- Get coach and trainee user IDs
+  SELECT id INTO v_coach_id FROM auth.users WHERE email = 'demo-coach@pro-fit.app';
+  SELECT id INTO v_trainee_id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app';
+
+  IF v_coach_id IS NULL OR v_trainee_id IS NULL THEN
+    RAISE EXCEPTION 'Demo accounts not found. Please create them first.';
+  END IF;
+
+  RAISE NOTICE 'Coach ID: %', v_coach_id;
+  RAISE NOTICE 'Trainee ID: %', v_trainee_id;
+
+  -- Create coach-trainee relationship
+  INSERT INTO coach_trainees (coach_id, trainee_id, is_primary, status, started_at)
+  VALUES (v_coach_id, v_trainee_id, true, 'active', v_today - INTERVAL '14 days')
+  ON CONFLICT (coach_id, trainee_id) DO NOTHING;
+
+  RAISE NOTICE 'Created coach-trainee relationship';
+
+  -- Create sample exercises
+  INSERT INTO exercises (created_by, exercise_name, description, video_url, is_active)
+  VALUES
+    (v_coach_id, 'Push-ups', 'Upper body strength exercise', 'https://www.youtube.com/watch?v=IODxDxX7oi4', true),
+    (v_coach_id, 'Squats', 'Lower body strength exercise', 'https://www.youtube.com/watch?v=aclHkVaku9U', true),
+    (v_coach_id, 'Plank', 'Core stability exercise', 'https://www.youtube.com/watch?v=ASdvN_XEl_c', true),
+    (v_coach_id, 'Jumping Jacks', 'Cardio warm-up', 'https://www.youtube.com/watch?v=c4DAnQ6DtF8', true),
+    (v_coach_id, 'Ball Handling Drills', 'Basketball dribbling practice', 'https://www.youtube.com/watch?v=6xPZPGxjPU8', true),
+    (v_coach_id, 'Shooting Practice', 'Basketball shooting form', 'https://www.youtube.com/watch?v=hN1OjJeC4-Y', true),
+    (v_coach_id, 'Defensive Slides', 'Basketball defense footwork', 'https://www.youtube.com/watch?v=KvovK74UFuc', true),
+    (v_coach_id, 'Layup Drills', 'Basketball finishing at the rim', 'https://www.youtube.com/watch?v=F2cGwy5TaQc', true)
+  ON CONFLICT DO NOTHING;
+
+  -- Get exercise IDs
+  SELECT ARRAY_AGG(exercise_id ORDER BY exercise_id) INTO v_exercise_ids
+  FROM exercises WHERE created_by = v_coach_id;
+
+  RAISE NOTICE 'Created % exercises', array_length(v_exercise_ids, 1);
+
+  -- Calculate week start (Sunday)
+  v_week_start := v_today - (EXTRACT(DOW FROM v_today)::INTEGER);
+
+  -- Create workout plan for current week
+  INSERT INTO workout_plans (coach_id, trainee_id, plan_name, start_date, end_date, status, coach_notes, published_at)
+  VALUES (
+    v_coach_id,
+    v_trainee_id,
+    'Basketball Fundamentals Week',
+    v_week_start,
+    v_week_start + INTERVAL '6 days',
+    'published',
+    'Basketball fundamentals week - focus on ball handling, shooting form, and conditioning',
+    v_week_start
+  )
+  RETURNING workout_plan_id INTO v_plan_id;
+
+  RAISE NOTICE 'Created workout plan ID: %', v_plan_id;
+
+  -- Create workout days for the week
+  -- Day 0 (Sunday) - Rest
+  INSERT INTO workout_days (workout_plan_id, scheduled_date, title, sort_order)
+  VALUES (v_plan_id, v_week_start, 'Rest & Recovery', 0);
+
+  -- Day 1 (Monday) - Strength Foundation
+  INSERT INTO workout_days (workout_plan_id, scheduled_date, title, sort_order)
+  VALUES (v_plan_id, v_week_start + 1, 'Strength Foundation', 1)
+  RETURNING workout_day_id INTO v_day_id;
+
+  INSERT INTO workout_items (workout_day_id, exercise_id, sets, reps_min, reps_max, sort_order)
+  VALUES
+    (v_day_id, v_exercise_ids[1], 3, 12, 15, 1),
+    (v_day_id, v_exercise_ids[2], 3, 15, 20, 2),
+    (v_day_id, v_exercise_ids[3], 3, 30, 45, 3);
+
+  -- Day 2 (Tuesday) - Ball Handling
+  INSERT INTO workout_days (workout_plan_id, scheduled_date, title, sort_order)
+  VALUES (v_plan_id, v_week_start + 2, 'Ball Handling Mastery', 2)
+  RETURNING workout_day_id INTO v_day_id;
+
+  INSERT INTO workout_items (workout_day_id, exercise_id, sets, sort_order)
+  VALUES
+    (v_day_id, v_exercise_ids[5], 3, 1),
+    (v_day_id, v_exercise_ids[6], 4, 2),
+    (v_day_id, v_exercise_ids[8], 3, 3);
+
+  -- Day 3 (Wednesday) - Cardio & Conditioning
+  INSERT INTO workout_days (workout_plan_id, scheduled_date, title, sort_order)
+  VALUES (v_plan_id, v_week_start + 3, 'Cardio & Conditioning', 3)
+  RETURNING workout_day_id INTO v_day_id;
+
+  INSERT INTO workout_items (workout_day_id, exercise_id, sets, reps_min, reps_max, sort_order)
+  VALUES
+    (v_day_id, v_exercise_ids[4], 4, 20, 30, 1),
+    (v_day_id, v_exercise_ids[7], 3, 10, 15, 2),
+    (v_day_id, v_exercise_ids[2], 3, 12, 15, 3);
+
+  -- Day 4 (Thursday) - Shooting Practice
+  INSERT INTO workout_days (workout_plan_id, scheduled_date, title, sort_order)
+  VALUES (v_plan_id, v_week_start + 4, 'Shooting Form & Accuracy', 4)
+  RETURNING workout_day_id INTO v_day_id;
+
+  INSERT INTO workout_items (workout_day_id, exercise_id, sets, sort_order)
+  VALUES
+    (v_day_id, v_exercise_ids[6], 5, 1),
+    (v_day_id, v_exercise_ids[8], 4, 2),
+    (v_day_id, v_exercise_ids[5], 2, 3);
+
+  -- Day 5 (Friday) - Full Practice
+  INSERT INTO workout_days (workout_plan_id, scheduled_date, title, sort_order)
+  VALUES (v_plan_id, v_week_start + 5, 'Full Basketball Practice', 5)
+  RETURNING workout_day_id INTO v_day_id;
+
+  INSERT INTO workout_items (workout_day_id, exercise_id, sets, sort_order)
+  VALUES
+    (v_day_id, v_exercise_ids[5], 3, 1),
+    (v_day_id, v_exercise_ids[6], 3, 2),
+    (v_day_id, v_exercise_ids[7], 3, 3),
+    (v_day_id, v_exercise_ids[8], 3, 4);
+
+  -- Day 6 (Saturday) - Active Recovery
+  INSERT INTO workout_days (workout_plan_id, scheduled_date, title, sort_order)
+  VALUES (v_plan_id, v_week_start + 6, 'Active Recovery', 6)
+  RETURNING workout_day_id INTO v_day_id;
+
+  INSERT INTO workout_items (workout_day_id, exercise_id, sets, sort_order)
+  VALUES
+    (v_day_id, v_exercise_ids[4], 2, 1),
+    (v_day_id, v_exercise_ids[3], 2, 2);
+
+  RAISE NOTICE 'Created workout days with exercises';
+
+  -- Create past check-ins (last 7 days)
+  FOR i IN 7..1 LOOP
+    v_date := v_today - i;
+
+    -- Find workout day for this date
+    SELECT workout_day_id INTO v_day_id
+    FROM workout_days
+    WHERE workout_plan_id = v_plan_id AND scheduled_date = v_date
+    LIMIT 1;
+
+    IF v_day_id IS NOT NULL THEN
+      -- Create daily check-in
+      INSERT INTO daily_checkins (
+        trainee_id, checkin_date, status,
+        trainee_notes,
+        sleep_hours, fatigue_level, soreness_area, soreness_level,
+        zone2_minutes, zone2_rpe, feeling_description,
+        submitted_at, reviewed_at
+      )
+      VALUES (
+        v_trainee_id,
+        v_date,
+        CASE WHEN i > 2 THEN 'reviewed' ELSE 'submitted' END,
+        CASE
+          WHEN i % 3 = 0 THEN 'A lot of homework tonight. I chose a shorter session and an earlier bedtime.'
+          WHEN i % 2 = 0 THEN 'Kept today light and made time for recovery.'
+          ELSE 'Finished a manageable session after school. Ready to review with my coach.'
+        END,
+        CASE WHEN i % 3 = 0 THEN 6.5 ELSE 7.5 + (i % 3) * 0.5 END,
+        CASE WHEN i % 3 = 0 THEN 4 ELSE 2 END,
+        CASE WHEN i % 4 = 0 THEN 'Legs' ELSE NULL END,
+        CASE WHEN i % 4 = 0 THEN 2 ELSE 0 END,
+        20,
+        3,
+        CASE
+          WHEN i % 3 = 0 THEN 'Exam prep took more energy today.'
+          ELSE 'Feeling steady. Keeping the routine realistic.'
+        END,
+        v_date + INTERVAL '20 hours',
+        CASE WHEN i > 2 THEN v_date + INTERVAL '21 hours' ELSE NULL END
+      )
+      RETURNING daily_checkin_id INTO v_checkin_id;
+
+      -- Add workout check-in
+      INSERT INTO workout_checkins (
+        daily_checkin_id, workout_day_id,
+        status, actual_duration_minutes, trainee_notes
+      )
+      VALUES (
+        v_checkin_id,
+        v_day_id,
+        CASE WHEN i % 4 = 0 THEN 'skipped' ELSE 'completed' END,
+        CASE WHEN i % 4 = 0 THEN 0 WHEN i % 3 = 0 THEN 20 ELSE 40 END,
+        CASE
+          WHEN i % 4 = 0 THEN 'Rest day. No make-up session needed.'
+          ELSE 'Completed the workout as planned.'
+        END
+      );
+
+      -- Add meal log
+      INSERT INTO diet_logs (
+        daily_checkin_id, meal_type, actual_food, logged_at
+      )
+      VALUES (
+        v_checkin_id,
+        'lunch',
+        CASE
+          WHEN i % 2 = 0 THEN 'Rice bowl with chicken, vegetables, and fruit'
+          ELSE 'Bean burrito, yogurt, and an apple'
+        END,
+        v_date + INTERVAL '12 hours'
+      );
+
+      -- Add coach feedback for reviewed check-ins
+      IF i > 2 THEN
+        INSERT INTO coach_feedback (
+          daily_checkin_id, coach_id, feedback_content, created_at
+        )
+        VALUES (
+          v_checkin_id,
+          v_coach_id,
+          CASE
+            WHEN i % 3 = 0 THEN 'Good call adapting to your workload. Prioritize sleep tonight; we can revisit the next session together.'
+            WHEN i % 4 = 0 THEN 'Thanks for logging recovery. Rest belongs in the plan. Let me know how your legs feel tomorrow.'
+            ELSE 'Keep choosing a session you can repeat comfortably. Bring any technique questions to our next practice.'
+          END,
+          v_date + INTERVAL '21 hours'
+        );
+      END IF;
+    END IF;
+  END LOOP;
+
+  RAISE NOTICE 'Created check-ins with meals and feedback';
+
+  -- Create diet plans for this week
+  FOR i IN 0..6 LOOP
+    v_date := v_week_start + i;
+
+    INSERT INTO diet_plans (
+      coach_id, trainee_id, scheduled_date, status, coach_notes, published_at
+    )
+    VALUES (
+      v_coach_id,
+      v_trainee_id,
+      v_date,
+      'published',
+      'Flexible meal ideas, not a calorie prescription. Adjust portions to hunger, activity, allergies, and individual guidance.',
+      v_week_start
+    )
+    RETURNING diet_plan_id INTO v_diet_plan_id;
+
+    -- Add meals for this day
+    INSERT INTO diet_meals (diet_plan_id, meal_type, meal_name, meal_details, sort_order)
+    VALUES
+      (v_diet_plan_id, 'breakfast', 'Oatmeal, yogurt & berries', 'Start the school day with a meal you enjoy.', 1),
+      (v_diet_plan_id, 'lunch', 'Chicken or tofu rice bowl', 'Include a protein source, grains, and colorful vegetables.', 2),
+      (v_diet_plan_id, 'snack', 'Banana & nut or seed butter', 'An easy option when there is a long gap before dinner. Adapt for allergies.', 3),
+      (v_diet_plan_id, 'dinner', 'Pasta, beans & vegetables', 'Refuel after practice and make time to eat.', 4);
+  END LOOP;
+
+  RAISE NOTICE 'Created diet plans with meals';
+  RAISE NOTICE '✅ Sample data population complete!';
+  RAISE NOTICE 'Refresh your app to see the data.';
+END $$;

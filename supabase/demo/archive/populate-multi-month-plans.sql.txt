@@ -1,0 +1,378 @@
+-- Create COMPREHENSIVE multi-month workout and diet plans
+-- Run cleanup-demo-data.sql FIRST, then run this
+-- Creates 3 months of progressive training with weekly cycles
+
+DO $$
+DECLARE
+  v_coach_id UUID;
+  v_trainee_id UUID;
+  v_plan_id BIGINT;
+  v_day_id BIGINT;
+  v_checkin_id BIGINT;
+  v_diet_plan_id BIGINT;
+  v_date DATE;
+  v_week_start DATE;
+  v_month_start DATE;
+  v_today DATE := CURRENT_DATE;
+  v_exercise_map JSONB := '{}';
+  v_exercise_id BIGINT;
+  v_month INT;
+  v_week INT;
+  v_day INT;
+BEGIN
+  -- Get demo account IDs
+  SELECT id INTO v_coach_id FROM auth.users WHERE email = 'demo-coach@pro-fit.app';
+  SELECT id INTO v_trainee_id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app';
+
+  IF v_coach_id IS NULL OR v_trainee_id IS NULL THEN
+    RAISE EXCEPTION 'Demo accounts not found. Create them first.';
+  END IF;
+
+  -- Create coach-trainee relationship
+  INSERT INTO coach_trainees (coach_id, trainee_id, is_primary, status, started_at)
+  VALUES (v_coach_id, v_trainee_id, true, 'active', v_today - INTERVAL '90 days')
+  ON CONFLICT (coach_id, trainee_id) DO NOTHING;
+
+  RAISE NOTICE '========================================';
+  RAISE NOTICE 'Creating comprehensive exercise library...';
+  RAISE NOTICE '========================================';
+
+  -- ============================================
+  -- EXERCISE LIBRARY with YouTube links
+  -- ============================================
+
+  -- Push exercises
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, video_url, is_active)
+  VALUES (v_coach_id, 'Dumbbell Bench Press / Push-Up', 'Build upper-body pushing strength. Keep your shoulder blades stable and avoid shrugging. Leave 2–3 reps in reserve. Prioritize good form.', 'Dumbbells or bodyweight', 'https://www.youtube.com/watch?v=iA6xEQ31jGI&t=255s', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Dumbbell Bench Press / Push-Up}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Dumbbell Bench Press / Push-Up'))));
+
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, video_url, is_active)
+  VALUES (v_coach_id, 'Half-Kneeling Single-Arm Press', 'Keep your torso steady. Avoid arching your lower back to lift the weight. Leave 2–3 reps in reserve. Prioritize good form.', 'Light dumbbells', 'https://www.youtube.com/watch?v=d3CRIDSCOhw', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Half-Kneeling Single-Arm Press}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Half-Kneeling Single-Arm Press'))));
+
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, video_url, is_active)
+  VALUES (v_coach_id, 'Cable Triceps Pressdown / Close-Grip Push-Up', 'Keep your elbows steady and return slowly. Leave 2–3 reps in reserve. Prioritize good form.', 'Cable machine or bodyweight', 'https://www.youtube.com/watch?v=2cdIRe5tcqI', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Cable Triceps Pressdown / Close-Grip Push-Up}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Cable Triceps Pressdown / Close-Grip Push-Up'))));
+
+  -- Legs & Core exercises
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, video_url, is_active)
+  VALUES (v_coach_id, 'Goblet Squat', 'Bend at your hips and knees, tracking your knees over your toes. Use a depth you can control. Leave 2–3 reps in reserve. Prioritize good form.', 'Light dumbbells', 'https://www.youtube.com/watch?v=gCESNsDsbqk', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Goblet Squat}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Goblet Squat'))));
+
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, video_url, is_active)
+  VALUES (v_coach_id, 'Dumbbell Romanian Deadlift', 'Push your hips back and keep your spine neutral to build hip-extension strength. Leave 2–3 reps in reserve. Prioritize good form.', 'Light dumbbells', 'https://www.youtube.com/watch?v=xAL7lHwj30E', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Dumbbell Romanian Deadlift}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Dumbbell Romanian Deadlift'))));
+
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, video_url, is_active)
+  VALUES (v_coach_id, 'Split Squat', 'Use equal reps on each side. Start with bodyweight to build balance. Leave 2–3 reps in reserve. Prioritize good form.', 'Bodyweight', 'https://www.youtube.com/watch?v=la0pLPq-3A8', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Split Squat}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Split Squat'))));
+
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, video_url, is_active)
+  VALUES (v_coach_id, 'Dead Bug', 'Alternate sides slowly while keeping your lower back stable. Leave 2–3 reps in reserve. Prioritize good form.', 'Exercise mat', 'https://www.youtube.com/watch?v=GbSC02oU3To', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Dead Bug}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Dead Bug'))));
+
+  -- Pull exercises
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, video_url, is_active)
+  VALUES (v_coach_id, 'Chest-Supported Dumbbell Row', 'Build upper-body pulling strength without compensating through your lower back. Leave 2–3 reps in reserve. Prioritize good form.', 'Dumbbells and bench', 'https://www.youtube.com/watch?v=9zkP4Cd_cz0', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Chest-Supported Dumbbell Row}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Chest-Supported Dumbbell Row'))));
+
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, video_url, is_active)
+  VALUES (v_coach_id, 'Lat Pulldown / Resistance Band Pulldown', 'Pull within a comfortable shoulder range. Avoid swinging your body. Leave 2–3 reps in reserve. Prioritize good form.', 'Cable machine or resistance band', 'https://www.youtube.com/watch?v=_97pmOC2tzE', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Lat Pulldown / Resistance Band Pulldown}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Lat Pulldown / Resistance Band Pulldown'))));
+
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, video_url, is_active)
+  VALUES (v_coach_id, 'Resistance Band Face Pull', 'Use light resistance and controlled shoulder-blade movement. Leave 2–3 reps in reserve. Prioritize good form.', 'Resistance band', 'https://www.youtube.com/watch?v=JBpj9-3tP0c', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Resistance Band Face Pull}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Resistance Band Face Pull'))));
+
+  -- General exercises
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, video_url, is_active)
+  VALUES (v_coach_id, 'Zone 2 Cardio', 'Use your individually tested Zone 2 range when available. Otherwise, use a comfortable pace where you can speak in full sentences, around 2–4/10 effort, as a practical guide. Choose brisk walking or cycling. High-intensity basketball does not count as Zone 2.', 'Cycling / Brisk walking', 'https://www.youtube.com/watch?v=L5J6sgQLvuE', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Zone 2 Cardio}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Zone 2 Cardio'))));
+
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, video_url, is_active)
+  VALUES (v_coach_id, 'Dynamic Warm-Up', 'Start with easy movement, mobilize your hips, ankles, and shoulders, then complete light warm-up sets.', '', 'https://www.youtube.com/watch?v=1e528F0pYPg', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Dynamic Warm-Up}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Dynamic Warm-Up'))));
+
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, is_active)
+  VALUES (v_coach_id, 'Basketball A · Skills & Footwork', '10 min dynamic warm-up → 20 min ball handling and footwork → 20 min shooting → 15 min small-group drills → 10 min cooldown. Your coach adjusts the intensity.', 'Basketball / Court', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Basketball A · Skills & Footwork}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Basketball A · Skills & Footwork'))));
+
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, is_active)
+  VALUES (v_coach_id, 'Basketball B · Team Play & Scrimmage', '10 min warm-up → 20 min passing and cutting → 20 min team tactics → 15 min controlled scrimmage → 10 min cooldown. Reduce additional training during game weeks.', 'Basketball / Court', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Basketball B · Team Play & Scrimmage}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Basketball B · Team Play & Scrimmage'))));
+
+  INSERT INTO exercises (created_by, exercise_name, description, equipment, is_active)
+  VALUES (v_coach_id, 'Easy Movement & Mobility', 'Gently mobilize your hips, ankles, and upper back without painful stretching. This is a recovery day with no strength or basketball session.', '', true)
+  ON CONFLICT DO NOTHING RETURNING exercise_id INTO v_exercise_id;
+  v_exercise_map := jsonb_set(v_exercise_map, '{Easy Movement & Mobility}', to_jsonb(COALESCE(v_exercise_id, (SELECT exercise_id FROM exercises WHERE created_by = v_coach_id AND exercise_name = 'Easy Movement & Mobility'))));
+
+  RAISE NOTICE '✅ Created 15 exercises with YouTube links';
+
+  -- ============================================
+  -- CREATE 3 MONTHS OF WEEKLY PLANS
+  -- Each month = 4 weekly plans
+  -- Each week = same 7-day structure
+  -- ============================================
+
+  -- Start from 3 months ago
+  v_month_start := v_today - INTERVAL '90 days';
+  v_month_start := v_month_start - ((EXTRACT(DOW FROM v_month_start)::INTEGER + 6) % 7); -- Adjust to Monday
+
+  FOR v_month IN 1..3 LOOP
+    RAISE NOTICE '';
+    RAISE NOTICE '========================================';
+    RAISE NOTICE 'Creating Month % workout plans...', v_month;
+    RAISE NOTICE '========================================';
+
+    FOR v_week IN 1..4 LOOP
+      v_week_start := v_month_start + ((v_month - 1) * 28 + (v_week - 1) * 7);
+
+      -- Create weekly plan
+      INSERT INTO workout_plans (coach_id, trainee_id, plan_name, goal, start_date, end_date, status, coach_notes, published_at)
+      VALUES (
+        v_coach_id,
+        v_trainee_id,
+        'Basketball Foundation · Month ' || v_month || ' Week ' || v_week,
+        'Build aerobic fitness, strength, and quality movement on the court',
+        v_week_start,
+        v_week_start + INTERVAL '6 days',
+        'published',
+        'Three-day split: push on Monday, legs and core on Wednesday, pull on Friday. Warm up for 5–10 minutes and learn each movement before adding weight. Leave 2–3 reps in reserve and rest 60–120 seconds between sets.
+
+45 minutes is a flexible target, not a requirement. On basketball days, schedule cardio separately. On strength days, prioritize lifting quality. Beginners can start with 15–20 minutes. Reduce volume when tired or short on sleep.',
+        v_week_start
+      )
+      RETURNING workout_plan_id INTO v_plan_id;
+
+      -- Day 0 (Monday) - Push
+      INSERT INTO workout_days (workout_plan_id, scheduled_date, title, estimated_duration_minutes, sort_order)
+      VALUES (v_plan_id, v_week_start, 'Push · Upper Body', 90, 0) RETURNING workout_day_id INTO v_day_id;
+
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Zone 2 Cardio')::BIGINT, 1, 2700, 1);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Dynamic Warm-Up')::BIGINT, 1, 480, 2);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, reps_min, reps_max, rest_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Dumbbell Bench Press / Push-Up')::BIGINT, 2, 8, 12, 90, 3);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, reps_min, reps_max, rest_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Half-Kneeling Single-Arm Press')::BIGINT, 2, 8, 10, 90, 4);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, reps_min, reps_max, rest_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Cable Triceps Pressdown / Close-Grip Push-Up')::BIGINT, 2, 10, 12, 90, 5);
+
+      -- Day 1 (Tuesday) - Basketball Skills
+      INSERT INTO workout_days (workout_plan_id, scheduled_date, title, estimated_duration_minutes, sort_order)
+      VALUES (v_plan_id, v_week_start + 1, 'Basketball · Skills & Footwork', 120, 1) RETURNING workout_day_id INTO v_day_id;
+
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Zone 2 Cardio')::BIGINT, 1, 2700, 1);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Basketball A · Skills & Footwork')::BIGINT, 1, 4500, 2);
+
+      -- Day 2 (Wednesday) - Legs & Core
+      INSERT INTO workout_days (workout_plan_id, scheduled_date, title, estimated_duration_minutes, sort_order)
+      VALUES (v_plan_id, v_week_start + 2, 'Legs & Core · Stability', 90, 2) RETURNING workout_day_id INTO v_day_id;
+
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Zone 2 Cardio')::BIGINT, 1, 2700, 1);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Dynamic Warm-Up')::BIGINT, 1, 480, 2);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, reps_min, reps_max, rest_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Goblet Squat')::BIGINT, 2, 8, 10, 90, 3);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, reps_min, reps_max, rest_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Dumbbell Romanian Deadlift')::BIGINT, 2, 8, 10, 90, 4);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, reps_min, reps_max, rest_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Split Squat')::BIGINT, 2, 6, 8, 90, 5);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, reps_min, reps_max, rest_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Dead Bug')::BIGINT, 2, 6, 10, 90, 6);
+
+      -- Day 3 (Thursday) - Cardio & Recovery
+      INSERT INTO workout_days (workout_plan_id, scheduled_date, title, estimated_duration_minutes, sort_order)
+      VALUES (v_plan_id, v_week_start + 3, 'Cardio & Recovery', 55, 3) RETURNING workout_day_id INTO v_day_id;
+
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Zone 2 Cardio')::BIGINT, 1, 2700, 1);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Easy Movement & Mobility')::BIGINT, 1, 600, 2);
+
+      -- Day 4 (Friday) - Pull
+      INSERT INTO workout_days (workout_plan_id, scheduled_date, title, estimated_duration_minutes, sort_order)
+      VALUES (v_plan_id, v_week_start + 4, 'Pull · Upper Body', 90, 4) RETURNING workout_day_id INTO v_day_id;
+
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Zone 2 Cardio')::BIGINT, 1, 2700, 1);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Dynamic Warm-Up')::BIGINT, 1, 480, 2);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, reps_min, reps_max, rest_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Chest-Supported Dumbbell Row')::BIGINT, 2, 8, 12, 90, 3);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, reps_min, reps_max, rest_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Lat Pulldown / Resistance Band Pulldown')::BIGINT, 2, 8, 12, 90, 4);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, reps_min, reps_max, rest_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Resistance Band Face Pull')::BIGINT, 2, 12, 15, 90, 5);
+
+      -- Day 5 (Saturday) - Basketball Team Play
+      INSERT INTO workout_days (workout_plan_id, scheduled_date, title, estimated_duration_minutes, sort_order)
+      VALUES (v_plan_id, v_week_start + 5, 'Basketball · Team Play', 120, 5) RETURNING workout_day_id INTO v_day_id;
+
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Zone 2 Cardio')::BIGINT, 1, 2700, 1);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Basketball B · Team Play & Scrimmage')::BIGINT, 1, 4500, 2);
+
+      -- Day 6 (Sunday) - Cardio & Recovery
+      INSERT INTO workout_days (workout_plan_id, scheduled_date, title, estimated_duration_minutes, sort_order)
+      VALUES (v_plan_id, v_week_start + 6, 'Cardio & Recovery', 55, 6) RETURNING workout_day_id INTO v_day_id;
+
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Zone 2 Cardio')::BIGINT, 1, 2700, 1);
+      INSERT INTO workout_items (workout_day_id, exercise_id, sets, duration_seconds, sort_order)
+      VALUES (v_day_id, (v_exercise_map->>'Easy Movement & Mobility')::BIGINT, 1, 600, 2);
+
+      RAISE NOTICE '  ✅ Month % Week % complete', v_month, v_week;
+    END LOOP;
+  END LOOP;
+
+  RAISE NOTICE '';
+  RAISE NOTICE '========================================';
+  RAISE NOTICE 'Creating check-ins for past 90 days...';
+  RAISE NOTICE '========================================';
+
+  -- ============================================
+  -- CREATE CHECK-INS FOR PAST 90 DAYS
+  -- ============================================
+  FOR i IN 90..1 LOOP
+    v_date := v_today - i;
+
+    -- Skip some days (every 6th day)
+    CONTINUE WHEN i % 6 = 0;
+
+    -- Find workout day for this date
+    SELECT workout_day_id INTO v_day_id
+    FROM workout_days wd
+    JOIN workout_plans wp ON wd.workout_plan_id = wp.workout_plan_id
+    WHERE wp.trainee_id = v_trainee_id AND wd.scheduled_date = v_date
+    LIMIT 1;
+
+    IF v_day_id IS NOT NULL THEN
+      DECLARE
+        is_rest BOOLEAN := (i % 4) = 0;
+        is_tired BOOLEAN := (i % 5) = 0;
+        is_reviewed BOOLEAN := i > 2;
+      BEGIN
+        INSERT INTO daily_checkins (
+          trainee_id, checkin_date, status, trainee_notes,
+          sleep_hours, fatigue_level, soreness_area, soreness_level,
+          zone2_minutes, zone2_rpe, feeling_description,
+          submitted_at, reviewed_at
+        )
+        VALUES (
+          v_trainee_id, v_date,
+          CASE WHEN is_reviewed THEN 'reviewed' ELSE 'submitted' END,
+          CASE
+            WHEN is_tired THEN 'A lot of homework tonight. I chose a shorter session and an earlier bedtime.'
+            WHEN is_rest THEN 'Kept today light and made time for recovery.'
+            ELSE 'Finished a manageable session after school. Ready to review with my coach.'
+          END,
+          CASE WHEN is_tired THEN 6.5 ELSE 7.5 + ((i % 3) * 0.5) END,
+          CASE WHEN is_tired THEN 4 ELSE 2 END,
+          CASE WHEN is_rest THEN 'Legs' ELSE '' END,
+          CASE WHEN is_rest THEN 3 ELSE 0 END,
+          CASE WHEN is_rest THEN 15 ELSE 20 END,
+          CASE WHEN is_rest THEN 2 ELSE 3 END,
+          CASE WHEN is_tired THEN 'Exam prep took more energy today.' ELSE 'Feeling steady. Keeping the routine realistic.' END,
+          v_date + INTERVAL '20 hours',
+          CASE WHEN is_reviewed THEN v_date + INTERVAL '21 hours' ELSE NULL END
+        )
+        RETURNING daily_checkin_id INTO v_checkin_id;
+
+        INSERT INTO workout_checkins (daily_checkin_id, workout_day_id, status, actual_duration_minutes, trainee_notes)
+        VALUES (
+          v_checkin_id, v_day_id,
+          CASE WHEN is_rest THEN 'skipped' ELSE 'completed' END,
+          CASE WHEN is_rest THEN 0 WHEN is_tired THEN 20 ELSE 40 END,
+          CASE WHEN is_rest THEN 'Rest day. No make-up session needed.' ELSE 'Shortened the plan to fit the day.' END
+        );
+
+        INSERT INTO diet_logs (daily_checkin_id, meal_type, actual_food, logged_at)
+        VALUES (
+          v_checkin_id, 'lunch',
+          CASE WHEN i % 2 = 1 THEN 'Rice bowl with chicken, vegetables, and fruit' ELSE 'Bean burrito, yogurt, and an apple' END,
+          v_date + INTERVAL '12 hours'
+        );
+
+        IF is_reviewed THEN
+          INSERT INTO coach_feedback (daily_checkin_id, coach_id, feedback_content, created_at)
+          VALUES (
+            v_checkin_id, v_coach_id,
+            CASE
+              WHEN is_tired THEN 'Good call adapting to your workload. Prioritize sleep tonight.'
+              WHEN is_rest THEN 'Thanks for logging recovery. Rest belongs in the plan.'
+              ELSE 'Keep choosing a session you can repeat comfortably.'
+            END,
+            v_date + INTERVAL '21 hours'
+          );
+        END IF;
+      END;
+    END IF;
+  END LOOP;
+
+  RAISE NOTICE '✅ Created ~75 check-ins across 90 days';
+
+  -- ============================================
+  -- CREATE DIET PLANS FOR ALL WEEKS
+  -- ============================================
+  RAISE NOTICE '';
+  RAISE NOTICE '========================================';
+  RAISE NOTICE 'Creating diet plans for all weeks...';
+  RAISE NOTICE '========================================';
+
+  FOR i IN 0..12 LOOP -- 13 weeks = ~3 months
+    v_week_start := (v_today - INTERVAL '90 days' - ((EXTRACT(DOW FROM (v_today - INTERVAL '90 days'))::INTEGER + 6) % 7) * INTERVAL '1 day') + (i * INTERVAL '7 days');
+
+    FOR v_day IN 0..6 LOOP
+      v_date := v_week_start + v_day;
+
+      INSERT INTO diet_plans (coach_id, trainee_id, scheduled_date, status, coach_notes, published_at)
+      VALUES (
+        v_coach_id, v_trainee_id, v_date, 'published',
+        'Flexible meal ideas, not a calorie prescription. Adjust portions to hunger, activity, allergies, and individual guidance.',
+        v_week_start
+      )
+      RETURNING diet_plan_id INTO v_diet_plan_id;
+
+      INSERT INTO diet_meals (diet_plan_id, meal_type, meal_name, meal_details, sort_order)
+      VALUES
+        (v_diet_plan_id, 'breakfast', 'Oatmeal, yogurt & berries', 'Start the school day with a meal you enjoy.', 1),
+        (v_diet_plan_id, 'lunch', 'Chicken or tofu rice bowl', 'Include a protein source, grains, and colorful vegetables.', 2),
+        (v_diet_plan_id, 'snack', 'Banana & nut or seed butter', 'An easy option when there is a long gap before dinner. Adapt for allergies.', 3),
+        (v_diet_plan_id, 'dinner', 'Pasta, beans & vegetables', 'Refuel after practice and make time to eat.', 4);
+    END LOOP;
+  END LOOP;
+
+  RAISE NOTICE '✅ Created ~91 days of diet plans';
+
+  RAISE NOTICE '';
+  RAISE NOTICE '========================================';
+  RAISE NOTICE '🎉 COMPLETE! Multi-month data created';
+  RAISE NOTICE '========================================';
+  RAISE NOTICE '📊 15 exercises with YouTube links';
+  RAISE NOTICE '📅 12 weekly workout plans (3 months)';
+  RAISE NOTICE '📝 ~75 check-ins with feedback';
+  RAISE NOTICE '🍽️  91 days of diet plans';
+  RAISE NOTICE '';
+  RAISE NOTICE '🔄 Refresh your Pro-fit app now!';
+  RAISE NOTICE '========================================';
+END $$;

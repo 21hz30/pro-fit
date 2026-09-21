@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pro-fit Demo Setup</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 { margin-top: 0; color: #333; }
+    label { display: block; margin: 15px 0 5px; font-weight: 500; }
+    input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; }
+    button:hover { background: #059669; }
+    button:disabled { background: #9ca3af; cursor: not-allowed; }
+    .log { margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 6px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; }
+    .success { color: #10b981; }
+    .error { color: #ef4444; }
+    .info { color: #3b82f6; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🚀 Pro-fit Demo Setup</h1>
+    <p>This will create two demo accounts in your Supabase database:</p>
+    <ul>
+      <li><strong>Coach Ben</strong> - demo-coach@pro-fit.app</li>
+      <li><strong>Michael</strong> - demo-athlete@pro-fit.app</li>
+    </ul>
+
+    <label for="serviceKey">Supabase Service Role Key</label>
+    <input
+      type="password"
+      id="serviceKey"
+      placeholder="Get from Supabase Dashboard > Settings > API > service_role"
+    />
+    <small style="color: #6b7280;">This key is used only in your browser and never sent anywhere else.</small>
+
+    <button id="createBtn" onclick="createDemoAccounts()">Create Demo Accounts</button>
+
+    <div id="log" class="log" style="display:none;"></div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    window.createDemoAccounts = async function() {
+      const logEl = document.getElementById('log');
+      const btn = document.getElementById('createBtn');
+      const serviceKey = document.getElementById('serviceKey').value.trim();
+
+      if (!serviceKey) {
+        alert('Please enter your Service Role Key');
+        return;
+      }
+
+      logEl.style.display = 'block';
+      logEl.innerHTML = '';
+      btn.disabled = true;
+
+      function log(msg, type = 'info') {
+        const line = document.createElement('div');
+        line.className = type;
+        line.textContent = msg;
+        logEl.appendChild(line);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      try {
+        log('🔧 Initializing Supabase client...');
+
+        const supabase = createClient(
+          'https://pntlpqdrdvtsfxneguxt.supabase.co',
+          serviceKey,
+          {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false
+            }
+          }
+        );
+
+        const DEMO_ACCOUNTS = [
+          {
+            email: 'demo-coach@pro-fit.app',
+            password: 'ProFit2026!',
+            displayName: 'Coach Ben',
+            role: 'coach'
+          },
+          {
+            email: 'demo-athlete@pro-fit.app',
+            password: 'ProFit2026!',
+            displayName: 'Michael',
+            role: 'trainee'
+          }
+        ];
+
+        for (const account of DEMO_ACCOUNTS) {
+          log(`\n👤 Creating ${account.displayName} (${account.role})...`);
+
+          // Create auth user
+          const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+            email: account.email,
+            password: account.password,
+            email_confirm: true,
+            user_metadata: {
+              display_name: account.displayName
+            }
+          });
+
+          if (authError) {
+            if (authError.message.includes('already registered')) {
+              log(`  ⚠️  User already exists: ${account.email}`, 'info');
+
+              // Get existing user
+              const { data: users } = await supabase.auth.admin.listUsers();
+              const existingUser = users.users.find(u => u.email === account.email);
+
+              if (existingUser) {
+                log(`  🔧 Updating existing user's role...`);
+                const { error: profileError } = await supabase
+                  .from('profiles')
+                  .update({ role: account.role, display_name: account.displayName })
+                  .eq('id', existingUser.id);
+
+                if (profileError) {
+                  log(`  ❌ Profile update error: ${profileError.message}`, 'error');
+                } else {
+                  log(`  ✅ Profile updated successfully`, 'success');
+                }
+              }
+              continue;
+            }
+            log(`  ❌ Auth error: ${authError.message}`, 'error');
+            continue;
+          }
+
+          log(`  ✅ Auth user created: ${authData.user.id}`, 'success');
+
+          // Update profile role
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ role: account.role, display_name: account.displayName })
+            .eq('id', authData.user.id);
+
+          if (profileError) {
+            log(`  ❌ Profile error: ${profileError.message}`, 'error');
+          } else {
+            log(`  ✅ Profile updated with role: ${account.role}`, 'success');
+          }
+
+          log(`  📧 Email: ${account.email}`, 'info');
+          log(`  🔑 Password: ${account.password}`, 'info');
+        }
+
+        log('\n🎉 Demo accounts ready!', 'success');
+        log('\nQuick login credentials:', 'info');
+        log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+        log('Coach Ben (coach)', 'info');
+        log('  Email: demo-coach@pro-fit.app', 'info');
+        log('  Password: ProFit2026!', 'info');
+        log('', 'info');
+        log('Michael (athlete)', 'info');
+        log('  Email: demo-athlete@pro-fit.app', 'info');
+        log('  Password: ProFit2026!', 'info');
+
+      } catch (error) {
+        log(`\n❌ Error: ${error.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>

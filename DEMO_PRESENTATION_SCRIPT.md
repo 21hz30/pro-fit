@@ -1,3 +1,5 @@
+> Status (2026-09-20): Recovery metrics and My Day persistence are available in local mode only. Cloud core data reloads after actions; there is no realtime subscription. Sample history is fictional. Use README.md and supabase/demo/README.md for current setup; treat the presentation below as talking points, not acceptance results.
+
 # Pro-fit Demo Presentation Script (口播稿)
 
 ---
@@ -195,7 +197,7 @@ For the technical folks in the room:
 - **Architecture**: Service layer pattern for clean code separation
 
 **Database:**
-- 15 tables managing users, workout plans, check-ins, diet logs, and coach feedback
+- 12 business tables managing users, workout plans, check-ins, diet logs, and coach feedback
 - Full relational integrity with foreign keys
 - Real-time updates when coaches publish new plans
 

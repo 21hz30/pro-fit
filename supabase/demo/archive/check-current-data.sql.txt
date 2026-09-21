@@ -1,0 +1,34 @@
+-- Check what data currently exists in Supabase
+-- Run this to see what's actually in the database
+
+-- Check users
+SELECT 'Users:' as info, email, id FROM auth.users WHERE email LIKE '%demo%';
+
+-- Check profiles
+SELECT 'Profiles:' as info, display_name, role, id FROM profiles
+WHERE id IN (SELECT id FROM auth.users WHERE email LIKE '%demo%');
+
+-- Check exercises
+SELECT 'Exercises:' as info, COUNT(*) as total FROM exercises
+WHERE created_by IN (SELECT id FROM auth.users WHERE email = 'demo-coach@pro-fit.app');
+
+-- Check workout plans
+SELECT 'Workout Plans:' as info, plan_name, start_date, end_date
+FROM workout_plans
+WHERE coach_id IN (SELECT id FROM auth.users WHERE email = 'demo-coach@pro-fit.app')
+ORDER BY start_date;
+
+-- Check workout days count
+SELECT 'Workout Days:' as info, COUNT(*) as total FROM workout_days
+WHERE workout_plan_id IN (
+  SELECT workout_plan_id FROM workout_plans
+  WHERE coach_id IN (SELECT id FROM auth.users WHERE email = 'demo-coach@pro-fit.app')
+);
+
+-- Check check-ins
+SELECT 'Check-ins:' as info, COUNT(*) as total FROM daily_checkins
+WHERE trainee_id IN (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app');
+
+-- Check diet plans
+SELECT 'Diet Plans:' as info, COUNT(*) as total FROM diet_plans
+WHERE trainee_id IN (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app');

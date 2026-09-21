@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider.jsx';
+import { getCoachPlans } from '../services/workoutService.js';
 import { getCoachRoster } from '../services/profileService.js';
 import { TrainingPrinciples, TrainingWeek } from '../components/TrainingWeek.jsx';
 import { Button, PageState, SelectField } from '../components/ui.jsx';
@@ -16,9 +17,9 @@ export function TrainingSchedule({ navigate }) {
     return () => { active = false; };
   }, [client]);
   useEffect(() => {
-    if (!trainee || !client.isLocal) return;
-    let active = true; setLoading(true);
-    client.operations.getCoachPlans(trainee).then((rows) => { if (active) setPlans(rows); }).catch((next) => { if (active) setError(next.message); }).finally(() => { if (active) setLoading(false); });
+    if (!trainee) return;
+    let active = true; setLoading(true); setError('');
+    getCoachPlans(client, trainee).then((rows) => { if (active) setPlans(rows); }).catch((next) => { if (active) setError(next.message); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [client, trainee]);
   const days = plans.filter((plan) => plan.status !== 'draft').flatMap((plan) => plan.days);

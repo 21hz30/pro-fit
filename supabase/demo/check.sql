@@ -1,0 +1,92 @@
+-- Administrative data inventory for demo users (does not test trainee RLS).
+-- Run this in Supabase SQL Editor
+
+-- First, verify the accounts exist
+SELECT 'Demo Accounts:' as section, email, id, raw_user_meta_data
+FROM auth.users
+WHERE email IN ('demo-coach@pro-fit.app', 'demo-athlete@pro-fit.app');
+
+-- Check profiles
+SELECT 'Profiles:' as section, display_name, role, id
+FROM profiles
+WHERE id IN (SELECT id FROM auth.users WHERE email IN ('demo-coach@pro-fit.app', 'demo-athlete@pro-fit.app'));
+
+-- Check coach-trainee relationship
+SELECT 'Relationships:' as section,
+  ct.coach_trainee_id,
+  coach.display_name as coach_name,
+  trainee.display_name as trainee_name,
+  ct.status
+FROM coach_trainees ct
+JOIN profiles coach ON coach.id = ct.coach_id
+JOIN profiles trainee ON trainee.id = ct.trainee_id
+WHERE coach.id IN (SELECT id FROM auth.users WHERE email = 'demo-coach@pro-fit.app');
+
+-- Check workout plans (what trainee should see)
+SELECT 'Workout Plans (for trainee):' as section,
+  wp.plan_name,
+  wp.start_date,
+  wp.end_date,
+  wp.status,
+  trainee.display_name as for_trainee
+FROM workout_plans wp
+JOIN profiles trainee ON trainee.id = wp.trainee_id
+WHERE wp.trainee_id IN (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app')
+ORDER BY wp.start_date DESC
+LIMIT 5;
+
+-- Count all workout plans
+SELECT 'Total Workout Plans:' as section, COUNT(*) as count
+FROM workout_plans
+WHERE trainee_id IN (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app');
+
+-- Count workout days
+SELECT 'Total Workout Days:' as section, COUNT(*) as count
+FROM workout_days wd
+JOIN workout_plans wp ON wp.workout_plan_id = wd.workout_plan_id
+WHERE wp.trainee_id IN (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app');
+
+-- Count check-ins
+SELECT 'Total Check-ins:' as section, COUNT(*) as count
+FROM daily_checkins
+WHERE trainee_id IN (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app');
+
+-- Count exercises
+SELECT 'Total Exercises:' as section, COUNT(*) as count
+FROM exercises
+WHERE created_by IN (SELECT id FROM auth.users WHERE email = 'demo-coach@pro-fit.app');
+
+-- Sample exercises with video links
+SELECT 'Sample Exercises:' as section, exercise_name,
+  CASE WHEN video_url IS NOT NULL THEN 'Has video' ELSE 'No video' END as video_status
+FROM exercises
+WHERE created_by IN (SELECT id FROM auth.users WHERE email = 'demo-coach@pro-fit.app')
+LIMIT 5;
+
+-- Check if today has a workout for Michael
+SELECT
+  CURRENT_DATE as today,
+  COUNT(*) as workouts_today
+FROM workout_days wd
+JOIN workout_plans wp ON wp.workout_plan_id = wd.workout_plan_id
+WHERE wp.trainee_id = (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app')
+  AND wd.scheduled_date = CURRENT_DATE;
+
+-- Check what date ranges the workout plans cover
+SELECT
+  MIN(start_date) as earliest_plan,
+  MAX(end_date) as latest_plan,
+  CURRENT_DATE as today
+FROM workout_plans
+WHERE trainee_id = (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app');
+
+-- Show the most recent workout days
+SELECT
+  wd.scheduled_date,
+  wd.title,
+  wp.plan_name
+FROM workout_days wd
+JOIN workout_plans wp ON wp.workout_plan_id = wd.workout_plan_id
+WHERE wp.trainee_id = (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app')
+ORDER BY wd.scheduled_date DESC
+LIMIT 10;

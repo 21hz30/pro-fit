@@ -10,11 +10,11 @@ The sample-data upgrade runs once. It adds missing records without overwriting s
 
 ## Actual launch blockers
 
-**This version has not been deployed and is not ready to collect live student data.** It currently runs in a single browser. A public production build using local storage is blocked at startup; localhost builds and local development remain available.
+**This repository has local and Supabase modes; production deployment and cloud readiness have not been verified in this review.** Local mode stores data in a single browser. A public production build using local storage is blocked at startup; localhost builds and local development remain available.
 
 The repository already contains Supabase migrations and service adapters for the earlier training/meal/check-in flow. Merely setting `VITE_DATA_MODE=supabase` does not deliver feature parity:
 
-- Recovery/wellness, daily priorities, weekly overview, and the recent-activity panel currently use local operations. Implement their database schema, constrained writes, row-level policies, and remote service adapters before launching these features.
+- Recovery/wellness and daily priorities currently use local operations. Weekly plans and submitted history now have remote adapters. Implement the missing recovery/priority schema, constrained writes and remote adapters before launching those features.
 - Remote signup currently creates a coachee. Add a coach application/approval flow and explicit coach–student matching, without invitation codes or automatic access to every student's records. Test access with at least two unrelated coaches and students.
 - Configure and verify confirmation and password-reset email, production redirect URLs, and private photo storage on the actual project.
 - Publish project-specific privacy and support information, and define account/data deletion, data retention, and the appropriate consent process for the pilot's age group.
@@ -35,7 +35,7 @@ VITE_APP_URL=https://YOUR_DOMAIN
 
 Never place service-role credentials in frontend environment variables. Apply reviewed migrations to staging before production. Build with `npm run build`; serve `dist` over HTTPS. Test the resulting deployment with real email delivery, authentication, database access, and photo uploads before inviting students. The runtime configuration guard checks configuration, not backend readiness.
 
-The owner must provide/select the Supabase project, hosting destination/domain, pilot audience, and support contact before this can become a live service. No cloud project, hosted deployment, or outgoing invitation was created during the local iteration.
+The owner must provide/select the Supabase project, hosting destination/domain, pilot audience, and support contact before this can become a live service. This repair did not create a cloud project, deploy a hosted build, run the cloud seed, or send invitations.
 
 ## Learning from the pilot
 

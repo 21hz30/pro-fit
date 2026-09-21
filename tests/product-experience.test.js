@@ -6,7 +6,8 @@ import { getRuntimeConfigError } from '../src/lib/runtimeConfig.js';
 
 const date = '2026-09-16';
 function memoryStorage() { const data = new Map(); return { getItem: (k) => data.get(k) ?? null, setItem: (k, v) => data.set(k, v), removeItem: (k) => data.delete(k) }; }
-const signIn = (client, role = 'coachee') => client.auth.signInWithPassword({ email: `${role}@profit.local`, password: DEMO_PASSWORD });
+const DEMO_EMAILS = { coach: 'demo-coach@pro-fit.app', coachee: 'demo-athlete@pro-fit.app' };
+const signIn = (client, role = 'coachee') => client.auth.signInWithPassword({ email: DEMO_EMAILS[role], password: DEMO_PASSWORD });
 
 test('daily suggestions prioritize pain and recovery, and never exceed available or assigned minutes', () => {
   const day = { availableMinutes: 30, schoolLoad: 'normal', energy: 'ready' };
@@ -28,7 +29,7 @@ test('sample upgrade is additive, idempotent and keeps existing personal records
   await signIn(original);
   const state = JSON.parse(storage.getItem(LOCAL_DATA_KEY));
   state.plans[0].goal = 'My own goal';
-  state.checkins.push({ daily_checkin_id: ++state.sequence, trainee_id: 'local-michael', checkin_date: '2026-09-15', status: 'draft', trainee_notes: 'Keep this personal note' });
+  state.checkins.push({ daily_checkin_id: ++state.sequence, trainee_id: 'demo-athlete', checkin_date: '2026-09-15', status: 'draft', trainee_notes: 'Keep this personal note' });
   const oldPlan = structuredClone(state.plans[0]); const oldCheckin = structuredClone(state.checkins[0]);
   storage.setItem(LOCAL_DATA_KEY, JSON.stringify(state));
   const upgraded = createLocalClient(storage, { today: date }); await upgraded.auth.getSession();
@@ -37,7 +38,7 @@ test('sample upgrade is additive, idempotent and keeps existing personal records
   assert.equal(next.profiles.filter((p) => p.role === 'trainee').length, 4);
   assert(next.checkins.length > 40); assert(next.feedback.length > 30);
   assert(!next.checkins.some((c) => c.checkin_date >= date));
-  assert(next.diets.filter((d) => d.trainee_id === 'local-michael').length === 7);
+  assert(next.diets.filter((d) => d.trainee_id === 'demo-athlete').length === 7);
   const ids = [...next.plans.map((p) => p.workout_plan_id), ...next.checkins.map((c) => c.daily_checkin_id), ...next.meals.map((m) => m.diet_log_id)];
   assert.equal(new Set(ids).size, ids.length);
   const before = storage.getItem(LOCAL_DATA_KEY);

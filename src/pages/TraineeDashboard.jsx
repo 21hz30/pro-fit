@@ -1,7 +1,7 @@
 import { DayPlanner } from '../components/DayPlanner.jsx';
 import { ActivityHistory } from '../components/ActivityHistory.jsx';
 import { RecoveryCheckin } from '../components/RecoveryCheckin.jsx';
-import { TrainingWeek, TrainingPrinciples } from '../components/TrainingWeek.jsx';
+import { TrainingPrinciples } from '../components/TrainingWeek.jsx';
 import { weekStart, addDays } from '../domain/training.js';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider.jsx';
@@ -60,6 +60,7 @@ export function TraineeDashboard({ initialTab = 'training' }) {
     if (tab === 'training') window.location.hash = '/trainee';
     else if (tab === 'week') window.location.hash = '/trainee/week';
     else if (tab === 'history') window.location.hash = '/trainee/history';
+    else if (tab === 'day') window.location.hash = '/day';
   }
 
   const load = useCallback(async () => {
@@ -70,7 +71,7 @@ export function TraineeDashboard({ initialTab = 'training' }) {
       const weekEndDate = addDays(weekStartDate, 6);
       const historyStart = addDays(localToday, -30);
 
-      const [workout, diet, checkin, streak, weeklyPlan, allPlans, history] = await Promise.all([
+      const [workout, diet, checkin, streak, weeklyPlan, allPlans, history, dayPlan] = await Promise.all([
         getTraineeWorkout(client, today),
         getTraineeDiet(client, today),
         getDailyCheckin(client, today),
@@ -78,9 +79,10 @@ export function TraineeDashboard({ initialTab = 'training' }) {
         getTraineeWeeklyPlan(client, weekStartDate, weekEndDate),
         getTraineeAllPlans(client),
         getTraineeCheckinHistory(client, historyStart, localToday),
+        client.isLocal ? client.operations.getDayPlan(today) : null,
       ]);
 
-      setData({ workout, diet, checkin, streak, weeklyPlan, allPlans, history });
+      setData({ workout, diet, checkin, streak, weeklyPlan, allPlans, history, dayPlan });
       setRecoveryDirty(false);
       setTraineeNotes(checkin.checkin?.trainee_notes || '');
     } catch (nextError) { setError(nextError.message); } finally { setLoading(false); }
@@ -107,8 +109,8 @@ export function TraineeDashboard({ initialTab = 'training' }) {
     <div className="page trainee-page">
       <header className="welcome-header">
         <div>
-          <h1>{activeTab === 'training' ? "Today's Training" : activeTab === 'week' ? 'Weekly Plan' : 'Training History'}</h1>
-          <p>{activeTab === 'training' ? `${today} · Your coach-assigned plan for today.` : activeTab === 'week' ? 'Your training schedule for this week.' : 'Past workouts and coach feedback.'}</p>
+          <h1>{activeTab === 'training' ? "Today's Training" : activeTab === 'week' ? 'Weekly Plan' : activeTab === 'day' ? 'My Day' : 'Training History'}</h1>
+          <p>{activeTab === 'training' ? `${today} · Your coach-assigned plan for today.` : activeTab === 'week' ? 'Your training schedule for this week.' : activeTab === 'day' ? 'Fit training and recovery around school and life.' : 'Past workouts and coach feedback.'}</p>
         </div>
         <div className="streak">
           <Icon name="local_fire_department" filled />
@@ -126,13 +128,20 @@ export function TraineeDashboard({ initialTab = 'training' }) {
         <button role="tab" aria-selected={activeTab === 'history'} className={activeTab === 'history' ? 'active' : ''} onClick={() => selectTab('history')}>
           <Icon name="history" />Training History
         </button>
+        <button role="tab" aria-selected={activeTab === 'day'} className={activeTab === 'day' ? 'active' : ''} onClick={() => selectTab('day')}><Icon name="calendar_today" />My Day</button>
       </div>
+      {activeTab === 'day' && <>
+        {client.isLocal ? <DayPlanner key={today} initial={data.dayPlan} wellness={checkin.checkin?.wellness} scheduledMinutes={workout.days.reduce((sum, day) => sum + Number(day.estimated_duration_minutes || 0), 0)} readOnly={isReadOnly} onSave={(input) => client.operations.saveDayPlan(today, input)} /> : <PageState title="Daily planning is not available for this account yet" message="You can still view your training plan and share notes with your coach." />}
+        <ActivityHistory records={history.filter((row) => row.checkin_date >= addDays(getLocalDateString(), -13))} isSample={profile.is_sample} onSelect={(date) => { setDate(date); selectTab('training'); }} />
+      </>}
 
       {/* TODAY'S TRAINING TAB */}
       {activeTab === 'training' && <>
         {isReadOnly ? <div className="readonly-banner"><Icon name="check_circle" /><strong>{isFuture ? 'Future Plan Preview' : checkin.checkin.status === 'reviewed' ? 'Reviewed by Coach' : 'Submitted'}</strong><span>This record is read-only.</span></div> : null}
 
+        <Field label="Training date" type="date" value={today} onChange={(event) => { if (event.target.value) setDate(event.target.value); }} />
         <TrainingPrinciples />
+        {client.isLocal ? <section className="panel recovery-panel"><SectionHeader>Recovery &amp; Cardio Check-in</SectionHeader><RecoveryCheckin key={today} initial={checkin.checkin?.wellness} readOnly={isReadOnly} onDirty={() => setRecoveryDirty(true)} onSave={async (input) => { const saved = await client.operations.saveWellness(today, input); setData((previous) => ({ ...previous, checkin: { ...previous.checkin, checkin: saved } })); setRecoveryDirty(false); }} /></section> : null}
 
         <div className="trainee-grid">
           <section className="panel workout-panel">
@@ -210,7 +219,7 @@ export function TraineeDashboard({ initialTab = 'training' }) {
           <SectionHeader trailing={<span className="status-chip">{checkin.checkin?.status || 'not started'}</span>}>Submit Daily Check-in</SectionHeader>
           <div>
             <TextAreaField label="Additional notes for your coach" value={traineeNotes} onChange={(event) => setTraineeNotes(event.target.value)} disabled={isReadOnly} placeholder="Questions or anything else you want your coach to know…" />
-            <Button icon="send" busy={busySubmit} disabled={isReadOnly} onClick={submitCheckin}>Submit Daily Check-in</Button>
+            <Button icon="send" busy={busySubmit} disabled={isReadOnly || (client.isLocal && (!checkin.checkin?.wellness || recoveryDirty))} onClick={submitCheckin}>Submit Daily Check-in</Button>
           </div>
         </section>
 
@@ -283,6 +292,8 @@ export function TraineeDashboard({ initialTab = 'training' }) {
                   <span>{completedWorkouts} workout{completedWorkouts !== 1 ? 's' : ''} completed</span>
                 </div>}
 
+                {checkin.wellness && <div className="history-stat"><span>{checkin.wellness.sleepHours}h sleep · Fatigue {checkin.wellness.fatigue}/5 · {checkin.wellness.zone2Minutes} min cardio</span></div>}
+                <Button variant="outline" onClick={() => { setDate(checkin.checkin_date); selectTab('training'); }}>View check-in</Button>
                 {checkin.trainee_notes && <p className="history-notes">"{checkin.trainee_notes}"</p>}
 
                 {hasFeedback && <div className="history-feedback">

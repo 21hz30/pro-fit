@@ -4,12 +4,12 @@ import { addDays, createBasketballWeek, weekStart } from '../domain/training.js'
 export function addSampleData(state, today, serializePlan) {
   if (state.sampleDataVersion === 1) return false;
   const id = () => ++state.sequence;
-  const coachId = 'local-ben';
+  const coachId = 'demo-coach';
   const students = [
-    ['local-michael', 'Michael'], ['sample-jordan', 'Jordan Lee'],
+    ['demo-athlete', 'Michael'], ['sample-jordan', 'Jordan Lee'],
     ['sample-avery', 'Avery Brooks'], ['sample-sam', 'Sam Rivera'],
   ];
-  if (!state.profiles.some((p) => p.id === coachId) || !state.profiles.some((p) => p.id === 'local-michael')) return false;
+  if (!state.profiles.some((p) => p.id === coachId) || !state.profiles.some((p) => p.id === 'demo-athlete')) return false;
   for (const [studentId, name] of students) {
     let student = state.profiles.find((p) => p.id === studentId);
     if (!student) {

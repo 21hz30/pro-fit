@@ -1,0 +1,48 @@
+-- Check if sample data exists in Supabase
+-- Run this in Supabase SQL Editor to verify data was inserted
+
+-- Check demo users
+SELECT 'Users' as table_name, email, id
+FROM auth.users
+WHERE email IN ('demo-coach@pro-fit.app', 'demo-athlete@pro-fit.app');
+
+-- Check profiles
+SELECT 'Profiles' as table_name, display_name, role, id
+FROM profiles
+WHERE id IN (
+  SELECT id FROM auth.users
+  WHERE email IN ('demo-coach@pro-fit.app', 'demo-athlete@pro-fit.app')
+);
+
+-- Check coach-trainee relationship
+SELECT 'Relationships' as table_name, COUNT(*) as count
+FROM coach_trainees
+WHERE coach_id IN (SELECT id FROM auth.users WHERE email = 'demo-coach@pro-fit.app');
+
+-- Check exercises
+SELECT 'Exercises' as table_name, COUNT(*) as count
+FROM exercises
+WHERE coach_id IN (SELECT id FROM auth.users WHERE email = 'demo-coach@pro-fit.app');
+
+-- Check workout plans
+SELECT 'Workout Plans' as table_name, COUNT(*) as count
+FROM workout_plans
+WHERE coach_id IN (SELECT id FROM auth.users WHERE email = 'demo-coach@pro-fit.app');
+
+-- Check workout days
+SELECT 'Workout Days' as table_name, COUNT(*) as count
+FROM workout_days
+WHERE workout_plan_id IN (
+  SELECT workout_plan_id FROM workout_plans
+  WHERE coach_id IN (SELECT id FROM auth.users WHERE email = 'demo-coach@pro-fit.app')
+);
+
+-- Check daily check-ins
+SELECT 'Daily Checkins' as table_name, COUNT(*) as count
+FROM daily_checkins
+WHERE trainee_id IN (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app');
+
+-- Check diet plans
+SELECT 'Diet Plans' as table_name, COUNT(*) as count
+FROM diet_plans
+WHERE coach_id IN (SELECT id FROM auth.users WHERE email = 'demo-coach@pro-fit.app');

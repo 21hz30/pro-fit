@@ -1,0 +1,18 @@
+-- Test what Michael (trainee) can see
+-- This simulates the app's queries
+
+-- Get Michael's user ID
+SELECT id, email FROM auth.users WHERE email = 'demo-athlete@pro-fit.app';
+
+-- Check workout plans for Michael (using his ID directly)
+SELECT wp.plan_name, wp.start_date, wp.end_date, wp.status
+FROM workout_plans wp
+WHERE wp.trainee_id = (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app')
+ORDER BY wp.start_date DESC
+LIMIT 5;
+
+-- Check if RLS policies might be blocking
+-- This query runs as superuser (bypasses RLS)
+SELECT 'Plans exist for trainee:' as check, COUNT(*) as count
+FROM workout_plans
+WHERE trainee_id = (SELECT id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app');

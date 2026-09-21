@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLocalClient, LOCAL_DATA_KEY, DEMO_PASSWORD } from '../src/local/client.js';
+import { createLocalClient, LOCAL_DATA_KEY, DEMO_PASSWORD, LOCAL_DEMO_TRAINEE_ID } from '../src/local/client.js';
 import { createBasketballWeek, recoveryAdvice, validateWellness } from '../src/domain/training.js';
 import { migrateEnglishDefaults } from '../src/local/englishMigration.js';
 import { signIn, signOut, signUpTrainee } from '../src/services/authService.js';
@@ -15,7 +15,8 @@ function memoryStorage() {
   return { getItem: (key) => entries.get(key) ?? null, setItem: (key, value) => entries.set(key, value), removeItem: (key) => entries.delete(key) };
 }
 const wellness = { sleepHours: 8, fatigue: 2, sorenessArea: '大腿', sorenessLevel: 2, painLevel: 0, painArea: '', feeling: '训练动作稳定，今天没有不适。', zone2Minutes: 45, zone2Rpe: 3 };
-async function login(client, role) { return signIn(client, { email: `${role}@profit.local`, password: DEMO_PASSWORD }); }
+const DEMO_EMAILS = { coach: 'demo-coach@pro-fit.app', coachee: 'demo-athlete@pro-fit.app' };
+async function login(client, role) { return signIn(client, { email: DEMO_EMAILS[role], password: DEMO_PASSWORD }); }
 
 test('template has seven 45-minute aerobic targets, three separated splits and exactly two basketball classes', () => {
   const plan = createBasketballWeek(date, 't');
@@ -54,11 +55,11 @@ test('two roles register without an invitation; sessions persist and local passw
 test('coach publishes workout and diet, coachee saves recovery/logs, coach reviews, and reload preserves feedback', async () => {
   const storage = memoryStorage(); const client = createLocalClient(storage, { today: date, seedSamples: false });
   await login(client, 'coach');
-  const dietInput = { traineeId: 'local-michael', scheduledDate: date, targetCalories: '2400', targetProteinG: '110', targetCarbsG: '300', targetFatG: '70', coachNotes: '规律饮食', meals: [{ mealType: 'breakfast', mealName: '燕麦与鸡蛋', mealDetails: '按饥饿程度调整' }] };
+  const dietInput = { traineeId: LOCAL_DEMO_TRAINEE_ID, scheduledDate: date, targetCalories: '2400', targetProteinG: '110', targetCarbsG: '300', targetFatG: '70', coachNotes: '规律饮食', meals: [{ mealType: 'breakfast', mealName: '燕麦与鸡蛋', mealDetails: '按饥饿程度调整' }] };
   const { dietPlanId } = await saveDietPlan(client, dietInput);
   await login(client, 'coachee'); assert.equal((await getTraineeDiet(client, date)).plan, null);
   await login(client, 'coach'); await saveDietPlan(client, { ...dietInput, dietPlanId }, { publish: true });
-  const nextPlan = createBasketballWeek('2026-09-21', 'local-michael');
+  const nextPlan = createBasketballWeek('2026-09-21', LOCAL_DEMO_TRAINEE_ID);
   const { workoutPlanId } = await saveWorkoutPlan(client, nextPlan);
   await login(client, 'coachee'); assert.equal((await getTraineeWorkout(client, '2026-09-21')).days.length, 0);
   await login(client, 'coach'); await saveWorkoutPlan(client, { ...nextPlan, workoutPlanId }, { publish: true });
@@ -70,29 +71,29 @@ test('coach publishes workout and diet, coachee saves recovery/logs, coach revie
   await saveWorkoutCheckin(client, date, { workoutDayId: workout.days[0].workout_day_id, status: 'completed', actualDurationMinutes: '85', traineeNotes: '保持动作质量' });
   const diet = await getTraineeDiet(client, date);
   await saveDietLog(client, date, { mealType: 'breakfast', dietMealId: diet.meals[0].diet_meal_id, actualFood: '燕麦、鸡蛋与水果', actualCalories: '500' });
-  await login(client, 'coach'); assert.equal((await getCoachSummary(client, ['local-michael'])).checkins.length, 0);
+  await login(client, 'coach'); assert.equal((await getCoachSummary(client, [LOCAL_DEMO_TRAINEE_ID])).checkins.length, 0);
   await login(client, 'coachee'); const submitted = await submitDailyCheckin(client, date, '明天希望轻松恢复。');
   await assert.rejects(() => client.operations.saveWellness(date, wellness), /read-only/);
-  await login(client, 'coach'); const summary = await getCoachSummary(client, ['local-michael']);
+  await login(client, 'coach'); const summary = await getCoachSummary(client, [LOCAL_DEMO_TRAINEE_ID]);
   assert.equal(summary.checkins[0].wellness.sleepHours, 8); assert.equal(summary.workoutLogs.length, 1); assert.equal(summary.dietLogs.length, 1);
   await submitCoachFeedback(client, submitted.daily_checkin_id, '明天保持轻松有氧，腿部如果仍酸痛可减至 20 分钟。');
   await login(client, 'coachee'); const reloaded = createLocalClient(storage, { today: date, seedSamples: false });
   const bundle = await getDailyCheckin(reloaded, date);
-  assert.equal(bundle.checkin.status, 'reviewed'); assert.equal(bundle.feedback.length, 1); assert.equal(bundle.feedback[0].coach.display_name, 'Ben'); assert.equal(bundle.dietLogs[0].actual_food, '燕麦、鸡蛋与水果');
+  assert.equal(bundle.checkin.status, 'reviewed'); assert.equal(bundle.feedback.length, 1); assert.equal(bundle.feedback[0].coach.display_name, 'Coach Ben'); assert.equal(bundle.dietLogs[0].actual_food, '燕麦、鸡蛋与水果');
 });
 
 test('overlapping plans and invalid inputs leave local state unchanged; another coachee cannot access private checkins', async () => {
   const storage = memoryStorage(); const client = createLocalClient(storage, { today: date, seedSamples: false });
   await login(client, 'coach'); const before = storage.getItem(LOCAL_DATA_KEY);
-  await assert.rejects(() => saveWorkoutPlan(client, createBasketballWeek(date, 'local-michael'), { publish: true }), /already has/);
+  await assert.rejects(() => saveWorkoutPlan(client, createBasketballWeek(date, LOCAL_DEMO_TRAINEE_ID), { publish: true }), /already has/);
   assert.equal(storage.getItem(LOCAL_DATA_KEY), before);
-  const invalid = createBasketballWeek('2026-09-21', 'local-michael'); invalid.days[0].items[0].durationSeconds = '-1';
+  const invalid = createBasketballWeek('2026-09-21', LOCAL_DEMO_TRAINEE_ID); invalid.days[0].items[0].durationSeconds = '-1';
   await assert.rejects(() => saveWorkoutPlan(client, invalid), /non-negative/);
   assert.equal(storage.getItem(LOCAL_DATA_KEY), before);
   await login(client, 'coachee'); const checkin = await client.operations.saveWellness(date, wellness); await submitDailyCheckin(client, date);
   await signUpTrainee(client, { email: 'private@example.com', password: 'Password10', displayName: 'Other' });
   await assert.rejects(() => client.operations.getCheckinBundle(checkin.daily_checkin_id), /permission/);
-  await assert.rejects(() => saveWorkoutPlan(client, createBasketballWeek(date, 'local-michael')), /permission/);
+  await assert.rejects(() => saveWorkoutPlan(client, createBasketballWeek(date, LOCAL_DEMO_TRAINEE_ID)), /permission/);
 });
 
 test('unavailable or corrupt persistence yields a recoverable auth error instead of deleting data', async () => {
@@ -127,4 +128,36 @@ test('English migration translates saved template content without changing IDs, 
   assert.equal(saved.workouts[0].title, 'Push · Upper Body');
   assert.equal(saved.workouts[0].trainee_notes, 'Keep my notes');
   assert.equal(migrateEnglishDefaults(saved), saved);
+});
+
+test('legacy demo IDs migrate without losing sessions, password hashes or custom records', async () => {
+  const storage = memoryStorage();
+  const client = createLocalClient(storage, { today: date, seedSamples: false });
+  await login(client, 'coachee');
+  await client.operations.saveWellness(date, wellness);
+  const saved = JSON.parse(storage.getItem(LOCAL_DATA_KEY));
+  saved.plans[0].goal = 'Custom goal remains';
+  saved.accounts[0].hash = 'custom-hash';
+  const legacy = JSON.stringify(saved).replaceAll('demo-coach@pro-fit.app','coach@profit.local').replaceAll('demo-athlete@pro-fit.app','coachee@profit.local').replaceAll('demo-coach','local-ben').replaceAll('demo-athlete','local-michael');
+  storage.setItem(LOCAL_DATA_KEY,legacy);
+  storage.setItem('pro-fit.session.v1','local-michael');
+  const upgraded = createLocalClient(storage,{today:date,seedSamples:false});
+  assert.equal((await upgraded.auth.getSession()).data.session.user.id, LOCAL_DEMO_TRAINEE_ID);
+  assert.equal((await getTraineeWorkout(upgraded,date)).days.length,1);
+  const next = JSON.parse(storage.getItem(LOCAL_DATA_KEY));
+  assert.equal(next.accounts[0].hash,'custom-hash');
+  assert.equal(next.plans[0].goal,'Custom goal remains');
+  assert.deepEqual(next.checkins[0].wellness,wellness);
+  const before = storage.getItem(LOCAL_DATA_KEY);
+  await createLocalClient(storage,{today:date,seedSamples:false}).auth.getSession();
+  assert.equal(storage.getItem(LOCAL_DATA_KEY),before);
+});
+
+test('fresh sample users see current workouts, named weekly plans, and plan history', async () => {
+  const client = createLocalClient(memoryStorage(), {today:date});
+  await login(client,'coachee');
+  assert.equal((await getTraineeWorkout(client,date)).days.length,1);
+  assert.equal((await client.operations.getTraineeWeek('2026-09-14','2026-09-20')).length,7);
+  assert.ok((await client.operations.getTraineeWeek('2026-09-14','2026-09-20'))[0].plan.plan_name);
+  assert.equal((await client.operations.getTraineeAllPlans()).length,3);
 });

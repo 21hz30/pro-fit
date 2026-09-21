@@ -132,7 +132,7 @@ export async function getTraineeWeeklyPlan(client, startDate, endDate) {
 
 // NEW: Get trainee's all workout plans (for history view)
 export async function getTraineeAllPlans(client) {
-  if (client?.isLocal) return [];
+  if (client?.isLocal) return client.operations.getTraineeAllPlans?.() || [];
   const user = await requireUser(client);
 
   return assertResult(
@@ -223,9 +223,9 @@ async function bestEffortDeletePlan(client, workoutPlanId) {
   }
 }
 
-export async function saveDraft(client, input) {
-  if (client?.isLocal) return client.operations.saveDraft(input);
+export async function saveDraft(client, input, { publish = false } = {}) {
   validatePlanInput(input);
+  if (client?.isLocal) return client.operations.saveDraft(input, { publish });
   const user = await requireUser(client);
   const existing = input.workoutPlanId ? assertResult(await client.from('workout_plans').select('workout_plan_id, status, trainee_id').eq('workout_plan_id', input.workoutPlanId).eq('coach_id', user.id).eq('status', 'draft').maybeSingle(), 'Unable to check if the draft still exists.') : null;
   if (input.workoutPlanId && !existing) throw new AppServiceError('This draft no longer exists or is no longer editable.', { code: 'NOT_FOUND' });
@@ -289,7 +289,13 @@ export async function saveDraft(client, input) {
     }
   }
 
+  if (publish) await publishDraft(client, input.workoutPlanId);
   return { workoutPlanId: input.workoutPlanId };
+}
+
+// Backward-compatible service name used by older local integrations.
+export async function saveWorkoutPlan(client, input, options = {}) {
+  return saveDraft(client, input, options);
 }
 
 export async function publishDraft(client, workoutPlanId) {
@@ -358,4 +364,13 @@ export async function getCoachDraft(client, workoutPlanId) {
       items: (items || []).filter((item) => item.workout_day_id === day.workout_day_id),
     })),
   };
+}
+
+export async function getCoachPlans(client, traineeId) {
+  if (client?.isLocal) return client.operations.getCoachPlans(traineeId);
+  const user = await requireUser(client);
+  return assertResult(await client.from('workout_plans')
+    .select('*, days:workout_days(*, items:workout_items(*, exercise:exercises(*)))')
+    .eq('coach_id', user.id).eq('trainee_id', traineeId)
+    .order('start_date', { ascending: false }), 'Unable to load assigned plans.') || [];
 }

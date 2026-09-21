@@ -4,17 +4,17 @@
 
 ```sh
 npm install
-npm run dev -- --port 5173
+VITE_DATA_MODE=local npm run dev -- --port 5173
 ```
 
-打开 http://127.0.0.1:5173 。默认启用本地模式，不需要 `.env.local`，不调用 Supabase，也不加载远程字体。
+打开 http://127.0.0.1:5173 。以上命令明确启用本地模式，不调用 Supabase，也不加载远程字体。省略覆盖变量时，以 `.env` 的配置为准。
 
-登录页可以直接点击 **Ben · Coach** 或 **Michael · Coachee**。手动登录资料：
+登录页可以直接点击 **Coach Ben · Coach** 或 **Michael · Coachee**。手动登录资料：
 
 | 角色 | 邮箱 | 本地演示密码 |
 | --- | --- | --- |
-| Coach | coach@profit.local | ProFit2026! |
-| Coachee | coachee@profit.local | ProFit2026! |
+| Coach | demo-coach@pro-fit.app | ProFit2026! |
+| Coachee | demo-athlete@pro-fit.app | ProFit2026! |
 
 这是本地演示账号，勿用于线上服务。注册页支持选择 Coach / Coachee，两者自动建立内部指导关系，无邀请码。新队员没有默认训练历史；Coach 可为其发布计划。Michael 的首次初始化包含当前周示例计划。跨周后，Coach 可通过“创建下一周”继续安排。
 
@@ -62,4 +62,4 @@ npm run build
 
 `tests/local-workflow.test.js` 覆盖模板频次与时长、恢复数值校验、注册持久化、草稿可见性、发布、打卡、教练反馈、只读保护、未来日期、重复计划和账号数据隔离。原有路由与服务测试保留。
 
-临时 Playwright 验收脚本与截图放在 `/private/tmp/profit-qa` 和 `/private/tmp/profit-*.png`，未放入项目源代码。实际检查桌面 1440×1000、手机 390×844，包含本地照片上传与刷新、角色注册、草稿重新打开、周计划发布与反馈闭环。
+2026-09-20 修复：统一演示账号并迁移旧 ID；恢复恢复打卡与 My Day；接通计划历史和标签页路由；统计不再使用占位值。当前验收结果以本轮测试输出为准。

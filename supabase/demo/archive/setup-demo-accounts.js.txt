@@ -1,0 +1,80 @@
+// Run this script once to create demo accounts in Supabase
+// Usage: node setup-demo-accounts.js
+
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = 'https://pntlpqdrdvtsfxneguxt.supabase.co';
+const supabaseServiceKey = 'YOUR_SERVICE_ROLE_KEY'; // Get from Supabase Dashboard > Settings > API
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
+
+const DEMO_ACCOUNTS = [
+  {
+    email: 'demo-coach@pro-fit.app',
+    password: 'ProFit2026!',
+    displayName: 'Coach Ben',
+    role: 'coach'
+  },
+  {
+    email: 'demo-athlete@pro-fit.app',
+    password: 'ProFit2026!',
+    displayName: 'Michael',
+    role: 'trainee'
+  }
+];
+
+async function createDemoAccounts() {
+  console.log('Creating demo accounts in Supabase...\n');
+
+  for (const account of DEMO_ACCOUNTS) {
+    console.log(`Creating ${account.displayName} (${account.role})...`);
+
+    // Create auth user
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: account.email,
+      password: account.password,
+      email_confirm: true,
+      user_metadata: {
+        display_name: account.displayName
+      }
+    });
+
+    if (authError) {
+      console.error(`  ❌ Auth error: ${authError.message}`);
+      continue;
+    }
+
+    console.log(`  ✅ Auth user created: ${authData.user.id}`);
+
+    // Update profile role
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ role: account.role })
+      .eq('id', authData.user.id);
+
+    if (profileError) {
+      console.error(`  ❌ Profile error: ${profileError.message}`);
+    } else {
+      console.log(`  ✅ Profile updated with role: ${account.role}`);
+    }
+
+    console.log(`  📧 Email: ${account.email}`);
+    console.log(`  🔑 Password: ${account.password}\n`);
+  }
+
+  console.log('✅ Demo accounts created!\n');
+  console.log('Quick login credentials:');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  DEMO_ACCOUNTS.forEach(acc => {
+    console.log(`${acc.displayName} (${acc.role})`);
+    console.log(`  Email: ${acc.email}`);
+    console.log(`  Password: ${acc.password}\n`);
+  });
+}
+
+createDemoAccounts().catch(console.error);

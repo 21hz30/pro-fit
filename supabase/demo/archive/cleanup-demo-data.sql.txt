@@ -1,0 +1,32 @@
+-- Clean up existing demo data before repopulating
+-- Run this in Supabase SQL Editor FIRST
+
+DO $$
+DECLARE
+  v_coach_id UUID;
+  v_trainee_id UUID;
+BEGIN
+  -- Get demo account IDs
+  SELECT id INTO v_coach_id FROM auth.users WHERE email = 'demo-coach@pro-fit.app';
+  SELECT id INTO v_trainee_id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app';
+
+  IF v_coach_id IS NULL OR v_trainee_id IS NULL THEN
+    RAISE NOTICE 'Demo accounts not found - nothing to clean';
+    RETURN;
+  END IF;
+
+  -- Delete in correct order (respecting foreign keys)
+  DELETE FROM coach_feedback WHERE coach_id = v_coach_id;
+  DELETE FROM diet_logs WHERE daily_checkin_id IN (SELECT daily_checkin_id FROM daily_checkins WHERE trainee_id = v_trainee_id);
+  DELETE FROM workout_checkins WHERE daily_checkin_id IN (SELECT daily_checkin_id FROM daily_checkins WHERE trainee_id = v_trainee_id);
+  DELETE FROM daily_checkins WHERE trainee_id = v_trainee_id;
+  DELETE FROM diet_meals WHERE diet_plan_id IN (SELECT diet_plan_id FROM diet_plans WHERE trainee_id = v_trainee_id);
+  DELETE FROM diet_plans WHERE trainee_id = v_trainee_id;
+  DELETE FROM workout_items WHERE workout_day_id IN (SELECT workout_day_id FROM workout_days WHERE workout_plan_id IN (SELECT workout_plan_id FROM workout_plans WHERE trainee_id = v_trainee_id));
+  DELETE FROM workout_days WHERE workout_plan_id IN (SELECT workout_plan_id FROM workout_plans WHERE trainee_id = v_trainee_id);
+  DELETE FROM workout_plans WHERE trainee_id = v_trainee_id;
+  DELETE FROM exercises WHERE created_by = v_coach_id;
+  DELETE FROM coach_trainees WHERE coach_id = v_coach_id AND trainee_id = v_trainee_id;
+
+  RAISE NOTICE '✅ Cleaned up existing demo data';
+END $$;

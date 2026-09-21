@@ -8,9 +8,11 @@ import { saveLocalPhoto, deleteLocalPhoto, localPhotoUrl } from './photoStore.js
 
 export const LOCAL_DATA_KEY = 'pro-fit.local.v1';
 export const LOCAL_SESSION_KEY = 'pro-fit.session.v1';
+export const LOCAL_DEMO_COACH_ID = 'demo-coach';
+export const LOCAL_DEMO_TRAINEE_ID = 'demo-athlete';
 export const DEMO_ACCOUNTS = [
-  { id: 'demo-coach', display_name: 'Coach Ben', role: 'coach', email: 'demo-coach@pro-fit.app' },
-  { id: 'demo-athlete', display_name: 'Michael', role: 'trainee', email: 'demo-athlete@pro-fit.app' },
+  { id: LOCAL_DEMO_COACH_ID, display_name: 'Coach Ben', role: 'coach', email: 'demo-coach@pro-fit.app' },
+  { id: LOCAL_DEMO_TRAINEE_ID, display_name: 'Michael', role: 'trainee', email: 'demo-athlete@pro-fit.app' },
 ];
 export const DEMO_PASSWORD = 'ProFit2026!';
 const now = () => new Date().toISOString();
@@ -23,6 +25,34 @@ async function passwordHash(password, salt) {
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
   const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: new TextEncoder().encode(salt), iterations: 100000, hash: 'SHA-256' }, key, 256);
   return Array.from(new Uint8Array(bits), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function migrateLocalDemoIds(state) {
+  const aliases = { 'local-ben': LOCAL_DEMO_COACH_ID, 'local-michael': LOCAL_DEMO_TRAINEE_ID };
+  const remap = (value) => aliases[value] || value;
+  let changed = false;
+  const remapField = (rows, field) => {
+    for (const row of rows || []) {
+      if (row[field] && aliases[row[field]]) { row[field] = remap(row[field]); changed = true; }
+    }
+  };
+  for (const row of state.accounts || []) {
+    if (aliases[row.id]) { row.id = remap(row.id); changed = true; }
+    if (row.email === 'coach@profit.local') { row.email = 'demo-coach@pro-fit.app'; changed = true; }
+    if (row.email === 'coachee@profit.local') { row.email = 'demo-athlete@pro-fit.app'; changed = true; }
+  }
+  for (const row of state.profiles || []) {
+    if (aliases[row.id]) { row.id = remap(row.id); changed = true; }
+    if (row.email === 'coach@profit.local') { row.email = 'demo-coach@pro-fit.app'; changed = true; }
+    if (row.email === 'coachee@profit.local') { row.email = 'demo-athlete@pro-fit.app'; changed = true; }
+  }
+  remapField(state.relationships, 'coach_id'); remapField(state.relationships, 'trainee_id');
+  remapField(state.plans, 'coach_id'); remapField(state.plans, 'trainee_id');
+  remapField(state.diets, 'coach_id'); remapField(state.diets, 'trainee_id');
+  remapField(state.checkins, 'trainee_id'); remapField(state.feedback, 'coach_id');
+  remapField(state.dayPlans, 'trainee_id'); remapField(state.exercises, 'created_by');
+  for (const plan of state.plans || []) for (const day of plan.days || []) for (const item of day.items || []) { if (item.exercise) remapField([item.exercise], 'created_by'); }
+  return changed;
 }
 
 export function createLocalClient(storage, { today = null, events = null, seedSamples = true } = {}) {
@@ -94,15 +124,18 @@ export function createLocalClient(storage, { today = null, events = null, seedSa
     const coaches = state.profiles.filter((row) => row.role === 'coach');
     const coachees = state.profiles.filter((row) => row.role === 'trainee');
     for (const coach of coaches) for (const coachee of coachees) {
-      if (!state.relationships.some((row) => row.coach_id === coach.id && row.trainee_id === coachee.id)) state.relationships.push({ coach_trainee_id: id(state), coach_id: coach.id, trainee_id: coachee.id, is_primary: coach.id === 'local-ben', started_at: now() });
+      if (!state.relationships.some((row) => row.coach_id === coach.id && row.trainee_id === coachee.id)) state.relationships.push({ coach_trainee_id: id(state), coach_id: coach.id, trainee_id: coachee.id, is_primary: coach.id === LOCAL_DEMO_COACH_ID, started_at: now() });
     }
   }
   async function initialize() {
     if (storage.getItem(LOCAL_DATA_KEY)) {
       const state = read();
+      const migratedIds = migrateLocalDemoIds(state);
       const migrated = migrateEnglishDefaults(state);
       const enriched = seedSamples && addSampleData(migrated, today || getLocalDateString(), serializePlan);
-      if (migrated !== state || enriched) write(migrated);
+      if (migratedIds || migrated !== state || enriched) write(migrated);
+      const sessionId = storage.getItem(LOCAL_SESSION_KEY);
+      if (sessionId === 'local-ben' || sessionId === 'local-michael') storage.setItem(LOCAL_SESSION_KEY, sessionId === 'local-ben' ? LOCAL_DEMO_COACH_ID : LOCAL_DEMO_TRAINEE_ID);
       return;
     }
     const state = { version: 1, contentLocale: 'en-US', sequence: 0, accounts: [], profiles: [], relationships: [], plans: [], exercises: [], diets: [], checkins: [], workouts: [], meals: [], feedback: [] };
@@ -112,7 +145,7 @@ export function createLocalClient(storage, { today = null, events = null, seedSa
       state.profiles.push({ ...account, status: 'active' });
     }
     connectInternalAccounts(state);
-    const plan = serializePlan(state, createBasketballWeek(today || getLocalDateString(), 'local-michael'), 'local-ben');
+    const plan = serializePlan(state, createBasketballWeek(today || getLocalDateString(), LOCAL_DEMO_TRAINEE_ID), LOCAL_DEMO_COACH_ID);
     plan.status = 'published'; plan.published_at = now(); state.plans.push(plan);
     if (seedSamples) addSampleData(state, today || getLocalDateString(), serializePlan);
     // Another tab may have initialized while password hashing was pending.
@@ -178,7 +211,8 @@ export function createLocalClient(storage, { today = null, events = null, seedSa
     async getCoachExercises() { const state = read(); current(state); return state.exercises; },
     async getCoachPublishedPlans(traineeIds) { const state = read(); const user = current(state); return state.plans.filter((row) => row.coach_id === user.id && traineeIds.includes(row.trainee_id) && row.status !== 'draft').sort((a, b) => b.published_at.localeCompare(a.published_at)); },
     async getCoachPlans(traineeId) { const state = read(); const user = coachFor(state, traineeId); return state.plans.filter((row) => row.coach_id === user.id && row.trainee_id === traineeId); },
-    async getTraineeWeek(start, end) { const state = read(); const user = ownTrainee(state); return state.plans.filter((row) => row.trainee_id === user.id && row.status !== 'draft').flatMap((row) => row.days).filter((day) => day.scheduled_date >= start && day.scheduled_date <= end); },
+    async getTraineeWeek(start, end) { const state = read(); const user = ownTrainee(state); return state.plans.filter((row) => row.trainee_id === user.id && row.status !== 'draft').flatMap(({ days, ...plan }) => days.map((day) => ({ ...day, plan }))).filter((day) => day.scheduled_date >= start && day.scheduled_date <= end); },
+    async getTraineeAllPlans() { const state = read(); const user = ownTrainee(state); return state.plans.filter((row) => row.trainee_id === user.id && row.status !== 'draft').map(({ days, ...plan }) => plan).sort((a, b) => b.start_date.localeCompare(a.start_date)).slice(0, 20); },
     async getTraineeWorkout(date) { const state = read(); const user = ownTrainee(state); const plans = state.plans.filter((row) => row.trainee_id === user.id && row.status !== 'draft' && row.start_date <= date && row.end_date >= date); return { plans: plans.map(({ days, ...plan }) => plan), days: plans.flatMap(({ days, ...plan }) => days.filter((day) => day.scheduled_date === date).map((day) => ({ ...day, plan }))) }; },
     async saveWorkoutPlan(input, { publish = false } = {}) {
       const state = read(); const user = coachFor(state, input.traineeId);
@@ -190,6 +224,27 @@ export function createLocalClient(storage, { today = null, events = null, seedSa
       if (publish) { plan.status = 'published'; plan.published_at = now(); }
       state.plans = state.plans.filter((row) => row.workout_plan_id !== plan.workout_plan_id); state.plans.push(plan); write(state);
       return { workoutPlanId: plan.workout_plan_id };
+    },
+    async saveDraft(input, options = {}) { return operations.saveWorkoutPlan(input, options); },
+    async publishDraft(workoutPlanId) {
+      const state = read(); const user = current(state);
+      const plan = state.plans.find((row) => row.workout_plan_id === workoutPlanId && row.coach_id === user.id && row.status === 'draft');
+      if (!plan) throw new Error('This draft no longer exists or was already published.');
+      coachFor(state, plan.trainee_id);
+      if (state.plans.some((row) => row.workout_plan_id !== plan.workout_plan_id && row.trainee_id === plan.trainee_id && row.status !== 'draft' && row.days.some((day) => plan.days.some((next) => next.scheduled_date === day.scheduled_date)))) throw new Error('This coachee already has a published plan on these dates.');
+      plan.status = 'published'; plan.published_at = now(); write(state); return { workoutPlanId };
+    },
+    async deleteDraft(workoutPlanId) {
+      const state = read(); const user = current(state);
+      const plan = state.plans.find((row) => row.workout_plan_id === workoutPlanId && row.coach_id === user.id && row.status === 'draft');
+      if (!plan) return null;
+      state.plans = state.plans.filter((row) => row.workout_plan_id !== workoutPlanId); write(state); return null;
+    },
+    async getCoachDraft(workoutPlanId) {
+      const state = read(); const user = current(state);
+      const plan = state.plans.find((row) => row.workout_plan_id === workoutPlanId && row.coach_id === user.id && row.status === 'draft');
+      if (!plan) throw new Error('This draft no longer exists or is no longer editable.');
+      return plan;
     },
     async getTraineeDiet(date) { const state = read(); const user = ownTrainee(state); const plan = state.diets.find((row) => row.trainee_id === user.id && row.scheduled_date === date && row.status !== 'draft'); return { plan: plan || null, meals: plan?.meals || [] }; },
     async saveDietPlan(input, { publish = false } = {}) {

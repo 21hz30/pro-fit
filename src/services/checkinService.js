@@ -205,7 +205,7 @@ export async function getCoachSummary(client, traineeIds = []) {
   const ids = checkins.map((item) => item.daily_checkin_id);
   const [workoutResult, dietResult] = await Promise.all([
     client.from('workout_checkins').select('workout_checkin_id, daily_checkin_id, status').in('daily_checkin_id', ids),
-    client.from('diet_logs').select('diet_log_id, daily_checkin_id, meal_type').in('daily_checkin_id', ids),
+    client.from('diet_logs').select('diet_log_id, daily_checkin_id, meal_type, actual_calories, actual_protein_g, photo_path').in('daily_checkin_id', ids),
   ]);
   return {
     checkins,
@@ -245,6 +245,7 @@ export async function getTraineeCheckinHistory(client, startDate, endDate) {
       .from('daily_checkins')
       .select('daily_checkin_id, checkin_date, status, trainee_notes, submitted_at, reviewed_at')
       .eq('trainee_id', user.id)
+      .in('status', ['submitted', 'reviewed'])
       .gte('checkin_date', startDate)
       .lte('checkin_date', endDate)
       .order('checkin_date', { ascending: false }),

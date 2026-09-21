@@ -11,6 +11,6 @@ export function resolveAuthorizedRoute({ requestedPath, session, profile, recove
   if (!session || !profile || profile.status !== 'active') return 'login';
   const allowed = profile.role === 'coach'
     ? new Set(['coach', 'workout', 'diet', 'schedule', 'analytics'])
-    : new Set(['trainee', 'day']);
+    : new Set(['trainee', 'trainee/week', 'trainee/history', 'day']);
   return allowed.has(requestedPath) ? requestedPath : ROLE_HOME[profile.role] || 'login';
 }

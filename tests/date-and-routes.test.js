@@ -36,3 +36,11 @@ test('password recovery always resolves to the update-password route', () => {
   assert.equal(resolveAuthorizedRoute({ requestedPath: 'login', recoveryMode: true }), 'update-password');
 });
 
+
+test('trainee tabs retain their routes while coaches cannot open them', () => {
+  const session = { user: { id: 'u1' } };
+  for (const requestedPath of ['trainee/week','trainee/history','day']) {
+    assert.equal(resolveAuthorizedRoute({requestedPath,session,profile:{role:'trainee',status:'active'}}),requestedPath);
+    assert.equal(resolveAuthorizedRoute({requestedPath,session,profile:{role:'coach',status:'active'}}),'coach');
+  }
+});

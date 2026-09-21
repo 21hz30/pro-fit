@@ -1,3 +1,5 @@
+> Status (2026-09-20): Recovery metrics and My Day persistence are available in local mode only. Cloud core data reloads after actions; there is no realtime subscription. Sample history is fictional. Use README.md and supabase/demo/README.md for current setup; treat the presentation below as talking points, not acceptance results.
+
 # Pro-fit Demo Video Script
 
 ## 🎬 Demo Structure (5-7 minutes)
@@ -20,7 +22,7 @@
 ### 3. Coach Perspective (2 minutes)
 
 **Login as Ben (Coach)**
-- Email: `coach@profit.local`
+- Email: `demo-coach@pro-fit.app`
 - Password: `ProFit2026!`
 - Or click the quick login button: **Ben · Coach**
 
@@ -61,7 +63,7 @@
 ### 4. Athlete Perspective (2-3 minutes)
 
 **Login as Michael (Coachee)**
-- Email: `coachee@profit.local`
+- Email: `demo-athlete@pro-fit.app`
 - Password: `ProFit2026!`
 - Or click: **Michael · Coachee**
 

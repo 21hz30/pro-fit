@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import {
-  ArrowRight, BarChart3, Bell, CalendarDays, Camera, CheckCheck, ChevronLeft,
+  ArrowRight, BarChart3, Bell, CalendarDays, CalendarRange, History, MessageSquare, Timer, Clock, ClipboardCheck, Camera, CheckCheck, ChevronLeft,
   ChevronRight, Circle, CircleCheck, CircleHelp, CirclePlay, CirclePlus,
   CloudUpload, Dumbbell, Ellipsis, Flame, LayoutDashboard, ListFilter, LoaderCircle,
   LogOut, MailCheck, Menu, Plus, Radio, Search, Send, Trash2, TriangleAlert,
@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 
 const iconMap = {
+  calendar_view_week: CalendarRange, history: History, chat: MessageSquare, speed: Timer, pending: Clock, rate_review: ClipboardCheck,
+  local_dining: Utensils, photo_camera: Camera,
   add: Plus, add_a_photo: Camera, add_circle: CirclePlus, analytics: BarChart3,
   arrow_forward: ArrowRight, calendar_today: CalendarDays, check_circle: CircleCheck,
   chevron_left: ChevronLeft, chevron_right: ChevronRight, close: X,

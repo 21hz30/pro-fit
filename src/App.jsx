@@ -1,16 +1,17 @@
-import { TrainingSchedule } from './pages/TrainingSchedule.jsx';
-import { useEffect, useState } from 'react';
+const TrainingSchedule = lazy(() => import('./pages/TrainingSchedule.jsx').then((module) => ({ default: module.TrainingSchedule })));
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useAuth } from './auth/AuthProvider.jsx';
 import { normalizeHashRoute, resolveAuthorizedRoute, ROLE_HOME } from './auth/routePolicy.js';
 import { signOut } from './services/authService.js';
 import { AppShell, Button, Icon, PageState } from './components/ui.jsx';
 import { ConfigurationError, LoginPage, UpdatePasswordPage } from './pages/LoginPage.jsx';
-import { TraineeDashboard } from './pages/TraineeDashboard.jsx';
-import { CoachDashboard } from './pages/CoachDashboard.jsx';
-import { WorkoutAssignment } from './pages/WorkoutAssignment.jsx';
-import { DietAssignment } from './pages/DietAssignment.jsx';
+const TraineeDashboard = lazy(() => import('./pages/TraineeDashboard.jsx').then((module) => ({ default: module.TraineeDashboard })));
+const CoachDashboard = lazy(() => import('./pages/CoachDashboard.jsx').then((module) => ({ default: module.CoachDashboard })));
+const WorkoutAssignment = lazy(() => import('./pages/WorkoutAssignment.jsx').then((module) => ({ default: module.WorkoutAssignment })));
+const DietAssignment = lazy(() => import('./pages/DietAssignment.jsx').then((module) => ({ default: module.DietAssignment })));
 
 const routeTitles = {
+  'trainee/week': 'Weekly Plan', 'trainee/history': 'Training History',
   login: 'Login', trainee: "Today's Training", day: 'My Day', coach: 'Coach Dashboard',
   workout: 'Workout Assignment', diet: 'Diet Assignment', schedule: 'Schedule',
   analytics: 'Analytics', 'update-password': 'Update Password',
@@ -44,12 +45,12 @@ export default function App() {
     try { await signOut(auth.client); } finally { navigate('login'); }
   }
   let page;
-  if (authorizedPath === 'trainee' || authorizedPath === 'day') page = <TraineeDashboard initialTab={authorizedPath === 'day' ? 'day' : 'training'} />;
+  if (['trainee', 'trainee/week', 'trainee/history', 'day'].includes(authorizedPath)) page = <TraineeDashboard initialTab={authorizedPath === 'day' ? 'day' : authorizedPath.split('/')[1] || 'training'} />;
   else if (authorizedPath === 'coach') page = <CoachDashboard navigate={navigate} />;
   else if (authorizedPath === 'workout') page = <WorkoutAssignment requestedTraineeId={requested.query.get('trainee')} />;
   else if (authorizedPath === 'schedule') page = <TrainingSchedule navigate={navigate} />;
   else if (authorizedPath === 'diet') page = <DietAssignment requestedTraineeId={requested.query.get('trainee')} />;
   else page = <PlaceholderPage route={authorizedPath} />;
 
-  return <AppShell route={authorizedPath} navigate={navigate} role={auth.profile.role} profile={auth.profile} onLogout={logout}>{auth.client.isLocal ? <div className="local-workspace-banner"><span>{auth.profile.is_sample ? 'SAMPLE WORKSPACE' : 'LOCAL WORKSPACE'}</span><small>{auth.profile.is_sample ? 'Illustrative activity · Saved in this browser only' : 'Saved in this browser only · Cloud sync is not connected'}</small></div> : null}{page}</AppShell>;
+  return <AppShell route={authorizedPath} navigate={navigate} role={auth.profile.role} profile={auth.profile} onLogout={logout}>{auth.client.isLocal ? <div className="local-workspace-banner"><span>{auth.profile.is_sample ? 'SAMPLE WORKSPACE' : 'LOCAL WORKSPACE'}</span><small>{auth.profile.is_sample ? 'Illustrative activity · Saved in this browser only' : 'Saved in this browser only · Cloud sync is not connected'}</small></div> : null}<Suspense fallback={<PageState title="Loading workspace" />}>{page}</Suspense></AppShell>;
 }

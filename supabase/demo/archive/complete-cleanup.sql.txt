@@ -1,0 +1,78 @@
+-- Complete cleanup - removes EVERYTHING for demo accounts
+-- Run this FIRST
+
+DO $$
+DECLARE
+  v_coach_id UUID;
+  v_trainee_id UUID;
+BEGIN
+  -- Get demo account IDs
+  SELECT id INTO v_coach_id FROM auth.users WHERE email = 'demo-coach@pro-fit.app';
+  SELECT id INTO v_trainee_id FROM auth.users WHERE email = 'demo-athlete@pro-fit.app';
+
+  IF v_coach_id IS NULL OR v_trainee_id IS NULL THEN
+    RAISE NOTICE 'Demo accounts not found - nothing to clean';
+    RETURN;
+  END IF;
+
+  RAISE NOTICE 'Cleaning up data for:';
+  RAISE NOTICE 'Coach ID: %', v_coach_id;
+  RAISE NOTICE 'Trainee ID: %', v_trainee_id;
+
+  -- Delete in correct order (respecting foreign keys)
+  DELETE FROM coach_feedback
+  WHERE coach_id = v_coach_id
+  OR daily_checkin_id IN (SELECT daily_checkin_id FROM daily_checkins WHERE trainee_id = v_trainee_id);
+
+  RAISE NOTICE 'Deleted coach_feedback';
+
+  DELETE FROM diet_logs
+  WHERE daily_checkin_id IN (SELECT daily_checkin_id FROM daily_checkins WHERE trainee_id = v_trainee_id);
+
+  RAISE NOTICE 'Deleted diet_logs';
+
+  DELETE FROM workout_checkins
+  WHERE daily_checkin_id IN (SELECT daily_checkin_id FROM daily_checkins WHERE trainee_id = v_trainee_id);
+
+  RAISE NOTICE 'Deleted workout_checkins';
+
+  DELETE FROM daily_checkins WHERE trainee_id = v_trainee_id;
+
+  RAISE NOTICE 'Deleted daily_checkins';
+
+  DELETE FROM diet_meals
+  WHERE diet_plan_id IN (SELECT diet_plan_id FROM diet_plans WHERE trainee_id = v_trainee_id OR coach_id = v_coach_id);
+
+  RAISE NOTICE 'Deleted diet_meals';
+
+  DELETE FROM diet_plans WHERE trainee_id = v_trainee_id OR coach_id = v_coach_id;
+
+  RAISE NOTICE 'Deleted diet_plans';
+
+  DELETE FROM workout_items
+  WHERE workout_day_id IN (
+    SELECT workout_day_id FROM workout_days
+    WHERE workout_plan_id IN (SELECT workout_plan_id FROM workout_plans WHERE trainee_id = v_trainee_id OR coach_id = v_coach_id)
+  );
+
+  RAISE NOTICE 'Deleted workout_items';
+
+  DELETE FROM workout_days
+  WHERE workout_plan_id IN (SELECT workout_plan_id FROM workout_plans WHERE trainee_id = v_trainee_id OR coach_id = v_coach_id);
+
+  RAISE NOTICE 'Deleted workout_days';
+
+  DELETE FROM workout_plans WHERE trainee_id = v_trainee_id OR coach_id = v_coach_id;
+
+  RAISE NOTICE 'Deleted workout_plans';
+
+  DELETE FROM exercises WHERE created_by = v_coach_id;
+
+  RAISE NOTICE 'Deleted exercises';
+
+  DELETE FROM coach_trainees WHERE coach_id = v_coach_id OR trainee_id = v_trainee_id;
+
+  RAISE NOTICE 'Deleted coach_trainees';
+
+  RAISE NOTICE '✅ Complete cleanup finished';
+END $$;

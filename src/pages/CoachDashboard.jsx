@@ -1,5 +1,5 @@
 import { RecoverySummary } from '../components/RecoveryCheckin.jsx';
-import { recoveryAdvice, addDays } from '../domain/training.js';
+import { calculateCoachMetrics } from '../domain/coachMetrics.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider.jsx';
 import { getCoachRoster } from '../services/profileService.js';
@@ -72,39 +72,10 @@ export function CoachDashboard({ navigate }) {
   const reviewed = summary.checkins.filter((item) => item.status === 'reviewed').length;
   const totalCheckins = summary.checkins.length;
 
-  // Recovery metrics - wellness data not available in current schema
-  const recoveryAlerts = [];
-  const poorSleepCount = 0;
-  const highFatigueCount = 0;
-
-  // Diet tracking
+  const { recentCheckins, recentMeals, wellnessRows, activeCount, recoveryAlerts, poorSleepCount, highFatigueCount, recentCompletionRate, avgCaloriesPerLog, avgProteinPerLog, photoCount, avgResponseHours } = calculateCoachMetrics(summary, getLocalDateString());
+  const recoveryDataAvailable = wellnessRows.length > 0;
   const totalMealLogs = summary.dietLogs.length;
-  const avgProteinPerLog = totalMealLogs > 0
-    ? Math.round(summary.dietLogs.reduce((sum, log) => sum + (Number(log.actual_protein_g) || 0), 0) / totalMealLogs)
-    : 0;
-  const avgCaloriesPerLog = totalMealLogs > 0
-    ? Math.round(summary.dietLogs.reduce((sum, log) => sum + (Number(log.actual_calories) || 0), 0) / totalMealLogs)
-    : 0;
-
-  // Active trainees (submitted at least one check-in)
-  const activeTraineeIds = new Set(summary.checkins.map((item) => item.trainee_id));
-  const activeCount = activeTraineeIds.size;
-  const engagementRate = roster.length ? Math.round((activeCount / roster.length) * 100) : 0;
-
-  // Recent activity (last 7 days)
-  const today = getLocalDateString();
-  const sevenDaysAgo = addDays(today, -7);
-  const recentCheckins = summary.checkins.filter((item) => item.checkin_date >= sevenDaysAgo);
-  const recentWorkouts = summary.workoutLogs.filter((item) => item.checkin_date >= sevenDaysAgo);
-  const recentCompletionRate = recentWorkouts.length
-    ? Math.round((recentWorkouts.filter((w) => w.status === 'completed').length / recentWorkouts.length) * 100)
-    : 0;
-
-  // Average response time (days between submission and review)
-  const reviewedCheckins = summary.checkins.filter((c) => c.status === 'reviewed' && c.checkin_date);
-  const avgResponseDays = reviewedCheckins.length > 0
-    ? Math.round(reviewedCheckins.length / 7) // Simplified: assuming evenly distributed over last week
-    : 0;
+  const engagementRate = roster.length ? Math.round(activeCount / roster.length * 100) : 0;
 
   const latestCheckinByTrainee = new Map();
   summary.checkins.forEach((item) => { if (!latestCheckinByTrainee.has(item.trainee_id)) latestCheckinByTrainee.set(item.trainee_id, item); });
@@ -120,7 +91,7 @@ export function CoachDashboard({ navigate }) {
           <MetricCard
             title="Total Coachees"
             value={roster.length}
-            note={`${activeCount} active (${engagementRate}%)`}
+            note={`${activeCount} active in 7d (${engagementRate}%)`}
             icon="group"
           />
           <MetricCard
@@ -139,8 +110,8 @@ export function CoachDashboard({ navigate }) {
           />
           <MetricCard
             title="Recovery Alerts"
-            value={recoveryAlerts.length}
-            note={`${poorSleepCount} poor sleep · ${highFatigueCount} high fatigue`}
+            value={recoveryDataAvailable ? recoveryAlerts.length : '—'}
+            note={recoveryDataAvailable ? `${poorSleepCount} poor sleep · ${highFatigueCount} high fatigue` : 'Recovery data unavailable'}
             icon="monitoring"
           />
         </section>
@@ -159,21 +130,21 @@ export function CoachDashboard({ navigate }) {
             <article className="stat-card">
               <Icon name="fitness_center" />
               <div>
-                <strong>{recentCompletionRate}%</strong>
+                <strong>{recentCompletionRate === null ? '—' : `${recentCompletionRate}%`}</strong>
                 <span>Completion rate (7d)</span>
               </div>
             </article>
             <article className="stat-card">
               <Icon name="restaurant" />
               <div>
-                <strong>{totalMealLogs}</strong>
+                <strong>{recentMeals.length}</strong>
                 <span>Meal logs received</span>
               </div>
             </article>
             <article className="stat-card">
               <Icon name="speed" />
               <div>
-                <strong>~{avgResponseDays}d</strong>
+                <strong>{avgResponseHours === null ? '—' : `${avgResponseHours}h`}</strong>
                 <span>Avg response time</span>
               </div>
             </article>
@@ -188,13 +159,13 @@ export function CoachDashboard({ navigate }) {
               <Icon name="local_dining" />
               <div>
                 <strong>{totalMealLogs} meals logged</strong>
-                <span>Avg: {avgCaloriesPerLog} kcal · {avgProteinPerLog}g protein per meal</span>
+                <span>Avg: {avgCaloriesPerLog ?? '—'} kcal · {avgProteinPerLog ?? '—'}g protein per meal</span>
               </div>
             </div>
             <div className="nutrition-stat">
               <Icon name="photo_camera" />
               <div>
-                <strong>{summary.dietLogs.filter((log) => log.photoUrl).length} with photos</strong>
+                <strong>{photoCount} with photos</strong>
                 <span>Visual compliance tracking</span>
               </div>
             </div>
@@ -239,11 +210,13 @@ export function CoachDashboard({ navigate }) {
         <section className="coach-recovery-alert">
           <Icon name="monitoring" />
           <div>
-            <strong>{recoveryAlerts.length ? `${recoveryAlerts.length} recovery check-ins need attention` : 'Team recovery looks good'}</strong>
+            <strong>{!recoveryDataAvailable ? 'No recent recovery data' : recoveryAlerts.length ? `${recoveryAlerts.length} recovery check-ins need attention` : 'No alerts in recent recovery check-ins'}</strong>
             <p>
-              {recoveryAlerts.length
+              {!recoveryDataAvailable
+                ? 'No recent recovery check-ins are available. Ask your athletes about sleep, fatigue, and discomfort before adjusting training.'
+                : recoveryAlerts.length
                 ? `Review fatigue, sleep, and pain before adjusting training. ${poorSleepCount} athletes with insufficient sleep, ${highFatigueCount} with high fatigue.`
-                : 'Your athletes are recovering well. Continue monitoring sleep, fatigue, and soreness levels.'}
+                : 'Continue checking sleep, fatigue, and discomfort with each athlete. Missing check-ins are not an indication of good recovery.'}
             </p>
           </div>
           <Button variant="outline" onClick={() => navigate('workout')}>Manage Plans</Button>
@@ -287,7 +260,7 @@ export function CoachDashboard({ navigate }) {
                 </button> : null}
               </div>
             </article>;
-          }) : <PageState icon="person_search" title={roster.length ? 'No athletes found' : 'No coachees yet'} message={roster.length ? 'Try another name.' : 'New coachees appear here after registering.'} />}
+          }) : <PageState icon="person_search" title={roster.length ? 'No athletes found' : 'No coachees yet'} message={roster.length ? 'Try another name.' : 'Assigned coachees appear here after your coach relationship is set up.'} />}
         </section>
       </div>
 

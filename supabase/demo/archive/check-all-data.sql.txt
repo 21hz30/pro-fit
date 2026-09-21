@@ -1,0 +1,8 @@
+-- Check all data counts in one result
+SELECT
+  (SELECT COUNT(*) FROM workout_plans) as workout_plans,
+  (SELECT COUNT(*) FROM workout_days) as workout_days,
+  (SELECT COUNT(*) FROM daily_checkins) as checkins,
+  (SELECT COUNT(*) FROM diet_plans) as diet_plans,
+  (SELECT COUNT(*) FROM exercises) as exercises,
+  (SELECT COUNT(*) FROM coach_trainees) as relationships;

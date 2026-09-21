@@ -1,0 +1,235 @@
+// Populate Supabase demo accounts with sample data
+// Run this in the browser console on your Pro-fit app
+
+async function populateSampleData() {
+  console.log('🚀 Starting sample data population...\n');
+
+  // Get current user (must be logged in as coach)
+  const { data: { user } } = await window.supabaseClient.auth.getUser();
+  if (!user) {
+    console.error('❌ Please log in first');
+    return;
+  }
+
+  const coachId = user.id;
+  console.log(`✅ Logged in as: ${user.email}`);
+
+  // Get or create trainee (Michael)
+  const { data: profiles } = await window.supabaseClient
+    .from('profiles')
+    .select('*')
+    .eq('role', 'trainee');
+
+  let traineeId;
+  if (profiles && profiles.length > 0) {
+    traineeId = profiles[0].id;
+    console.log(`✅ Found trainee: ${profiles[0].display_name} (${traineeId})`);
+  } else {
+    console.error('❌ No trainee found. Please create demo-athlete@pro-fit.app account first.');
+    return;
+  }
+
+  // Create coach-trainee relationship
+  const { error: relError } = await window.supabaseClient
+    .from('coach_trainees')
+    .upsert({
+      coach_id: coachId,
+      trainee_id: traineeId,
+      is_primary: true,
+      status: 'active'
+    }, { onConflict: 'coach_id,trainee_id' });
+
+  if (relError) {
+    console.log(`⚠️  Relationship: ${relError.message}`);
+  } else {
+    console.log('✅ Coach-trainee relationship created');
+  }
+
+  // Create sample exercises
+  const exercises = [
+    { name: 'Push-ups', category: 'strength', video_url: 'https://www.youtube.com/watch?v=IODxDxX7oi4' },
+    { name: 'Squats', category: 'strength', video_url: 'https://www.youtube.com/watch?v=aclHkVaku9U' },
+    { name: 'Plank', category: 'core', video_url: 'https://www.youtube.com/watch?v=ASdvN_XEl_c' },
+    { name: 'Jumping Jacks', category: 'cardio', video_url: 'https://www.youtube.com/watch?v=c4DAnQ6DtF8' },
+    { name: 'Ball Handling', category: 'basketball', video_url: 'https://www.youtube.com/watch?v=6xPZPGxjPU8' },
+    { name: 'Shooting Drills', category: 'basketball', video_url: 'https://www.youtube.com/watch?v=hN1OjJeC4-Y' }
+  ];
+
+  const createdExercises = [];
+  for (const ex of exercises) {
+    const { data, error } = await window.supabaseClient
+      .from('exercises')
+      .upsert({ ...ex, coach_id: coachId }, { onConflict: 'coach_id,name' })
+      .select()
+      .single();
+
+    if (data) createdExercises.push(data);
+  }
+  console.log(`✅ Created ${createdExercises.length} exercises`);
+
+  // Create sample workout plan for this week
+  const today = new Date();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+
+  const { data: plan, error: planError } = await window.supabaseClient
+    .from('workout_plans')
+    .insert({
+      coach_id: coachId,
+      trainee_id: traineeId,
+      start_date: weekStart.toISOString().split('T')[0],
+      end_date: new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'published',
+      coach_notes: 'Sample basketball training week - build fundamentals and endurance'
+    })
+    .select()
+    .single();
+
+  if (planError) {
+    console.error('❌ Plan creation failed:', planError.message);
+    return;
+  }
+  console.log('✅ Created workout plan');
+
+  // Create workout days
+  const workoutDays = [
+    { day: 0, title: 'Rest & Recovery', description: 'Light stretching and hydration' },
+    { day: 1, title: 'Strength Foundation', description: 'Build core and leg strength' },
+    { day: 2, title: 'Ball Handling', description: 'Dribbling and control drills' },
+    { day: 3, title: 'Cardio & Conditioning', description: 'Build endurance' },
+    { day: 4, title: 'Shooting Practice', description: 'Form and accuracy' },
+    { day: 5, title: 'Full Practice', description: 'Combine all skills' },
+    { day: 6, title: 'Active Recovery', description: 'Light cardio and stretching' }
+  ];
+
+  for (const wd of workoutDays) {
+    const dayDate = new Date(weekStart);
+    dayDate.setDate(weekStart.getDate() + wd.day);
+
+    const { data: day } = await window.supabaseClient
+      .from('workout_days')
+      .insert({
+        workout_plan_id: plan.workout_plan_id,
+        scheduled_date: dayDate.toISOString().split('T')[0],
+        title: wd.title,
+        day_notes: wd.description
+      })
+      .select()
+      .single();
+
+    if (day && wd.day > 0 && wd.day < 6) {
+      // Add exercises to this day
+      const dayExercises = wd.day % 2 === 0
+        ? createdExercises.slice(0, 3)
+        : createdExercises.slice(3, 6);
+
+      for (let i = 0; i < dayExercises.length; i++) {
+        await window.supabaseClient
+          .from('workout_items')
+          .insert({
+            workout_day_id: day.workout_day_id,
+            exercise_id: dayExercises[i].exercise_id,
+            sets: 3,
+            reps_or_duration: '10-15 reps',
+            sort_order: i + 1
+          });
+      }
+    }
+  }
+  console.log('✅ Created workout days with exercises');
+
+  // Create past check-ins
+  for (let daysAgo = 7; daysAgo >= 1; daysAgo--) {
+    const checkinDate = new Date(today);
+    checkinDate.setDate(today.getDate() - daysAgo);
+    const dateStr = checkinDate.toISOString().split('T')[0];
+
+    const { data: checkin } = await window.supabaseClient
+      .from('daily_checkins')
+      .insert({
+        trainee_id: traineeId,
+        checkin_date: dateStr,
+        status: daysAgo > 2 ? 'reviewed' : 'submitted',
+        trainee_notes: 'Completed today\'s workout. Feeling good and ready for tomorrow.',
+        sleep_hours: 7.5 + (daysAgo % 2) * 0.5,
+        fatigue_level: 2 + (daysAgo % 2),
+        soreness_area: daysAgo % 3 === 0 ? 'Legs' : null,
+        soreness_level: daysAgo % 3 === 0 ? 2 : 0,
+        zone2_minutes: 20,
+        zone2_rpe: 3,
+        feeling_description: 'Keeping up with the routine. Energy feels balanced.'
+      })
+      .select()
+      .single();
+
+    if (checkin) {
+      // Add meal log
+      await window.supabaseClient
+        .from('diet_logs')
+        .insert({
+          daily_checkin_id: checkin.daily_checkin_id,
+          meal_type: 'lunch',
+          actual_food: daysAgo % 2 === 0
+            ? 'Rice bowl with chicken, vegetables, and fruit'
+            : 'Bean burrito, yogurt, and an apple'
+        });
+
+      // Add coach feedback for reviewed check-ins
+      if (daysAgo > 2) {
+        await window.supabaseClient
+          .from('coach_feedback')
+          .insert({
+            daily_checkin_id: checkin.daily_checkin_id,
+            coach_id: coachId,
+            feedback_content: 'Great work! Keep maintaining this consistency. Remember to hydrate and get enough rest.'
+          });
+      }
+    }
+  }
+  console.log('✅ Created check-ins with meals and feedback');
+
+  // Create diet plan for this week
+  for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+    const dietDate = new Date(weekStart);
+    dietDate.setDate(weekStart.getDate() + dayOffset);
+
+    const { data: dietPlan } = await window.supabaseClient
+      .from('diet_plans')
+      .insert({
+        coach_id: coachId,
+        trainee_id: traineeId,
+        scheduled_date: dietDate.toISOString().split('T')[0],
+        status: 'published',
+        coach_notes: 'Balanced meals for training days. Adjust portions based on hunger and activity level.'
+      })
+      .select()
+      .single();
+
+    if (dietPlan) {
+      const meals = [
+        { meal_type: 'breakfast', meal_name: 'Oatmeal, yogurt & berries', meal_details: 'Start the day with sustained energy' },
+        { meal_type: 'lunch', meal_name: 'Chicken or tofu rice bowl', meal_details: 'Protein, grains, and vegetables' },
+        { meal_type: 'snack', meal_name: 'Banana & nut butter', meal_details: 'Quick energy between meals' },
+        { meal_type: 'dinner', meal_name: 'Pasta with beans & vegetables', meal_details: 'Refuel after practice' }
+      ];
+
+      for (let i = 0; i < meals.length; i++) {
+        await window.supabaseClient
+          .from('diet_meals')
+          .insert({
+            diet_plan_id: dietPlan.diet_plan_id,
+            ...meals[i],
+            sort_order: i + 1
+          });
+      }
+    }
+  }
+  console.log('✅ Created diet plans with meals');
+
+  console.log('\n🎉 Sample data population complete!');
+  console.log('Refresh the page to see the data.');
+}
+
+// Make it available globally
+window.populateSampleData = populateSampleData;
+console.log('✅ Function ready! Run: populateSampleData()');

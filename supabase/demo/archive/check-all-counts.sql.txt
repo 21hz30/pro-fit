@@ -1,0 +1,6 @@
+-- Check all tables separately
+SELECT COUNT(*) as workout_plans_count FROM workout_plans;
+SELECT COUNT(*) as workout_days_count FROM workout_days;
+SELECT COUNT(*) as checkins_count FROM daily_checkins;
+SELECT COUNT(*) as diet_plans_count FROM diet_plans;
+SELECT COUNT(*) as exercises_count FROM exercises;
