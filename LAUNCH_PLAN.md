@@ -14,7 +14,7 @@ The sample-data upgrade runs once. It adds missing records without overwriting s
 
 The repository already contains Supabase migrations and service adapters for the earlier training/meal/check-in flow. Merely setting `VITE_DATA_MODE=supabase` does not deliver feature parity:
 
-- Recovery/wellness and daily priorities currently use local operations. Weekly plans and submitted history now have remote adapters. Implement the missing recovery/priority schema, constrained writes and remote adapters before launching those features.
+- Daily priorities have local and remote adapters; apply and verify the dedicated [My Day migration](DAILY_PLANNING_SETUP.md) before enabling cloud saves. Recovery/wellness still uses local operations and needs its remote schema and adapter. Weekly plans and submitted history have remote adapters.
 - Remote signup currently creates a coachee. Add a coach application/approval flow and explicit coach–student matching, without invitation codes or automatic access to every student's records. Test access with at least two unrelated coaches and students.
 - Configure and verify confirmation and password-reset email, production redirect URLs, and private photo storage on the actual project.
 - Publish project-specific privacy and support information, and define account/data deletion, data retention, and the appropriate consent process for the pilot's age group.

@@ -22,7 +22,8 @@ Use the explicit local-mode override to test without contacting Supabase. A priv
 | Training plans, weekly view, history | Supported | Supported by service adapters |
 | Save draft and publish | Supported | Draft children save before publication |
 | Workout/meal logs and feedback | Supported | Supported by service adapters |
-| Recovery form, My Day priorities | Browser persistence | Not yet persisted remotely |
+| My Day priorities | Browser persistence | Service adapter; requires [planning migration](DAILY_PLANNING_SETUP.md) |
+| Recovery form | Browser persistence | Not yet persisted remotely |
 | Coach metrics | Recorded data, unknown values shown as — | Core metrics; wellness unavailable |
 | Account assignment | Internal demo roster | Administrative assignment required |
 

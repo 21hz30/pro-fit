@@ -1,4 +1,4 @@
-import { DayPlanner } from '../components/DayPlanner.jsx';
+import { DailyPlanning } from '../components/DailyPlanning.jsx';
 import { ActivityHistory } from '../components/ActivityHistory.jsx';
 import { RecoveryCheckin } from '../components/RecoveryCheckin.jsx';
 import { TrainingPrinciples } from '../components/TrainingWeek.jsx';
@@ -76,7 +76,7 @@ export function TraineeDashboard({ initialTab = 'training', focus = '' }) {
       const weekEndDate = addDays(weekStartDate, 6);
       const historyStart = addDays(localToday, -30);
 
-      const [workout, diet, checkin, streak, weeklyPlan, allPlans, history, dayPlan] = await Promise.all([
+      const [workout, diet, checkin, streak, weeklyPlan, allPlans, history] = await Promise.all([
         getTraineeWorkout(client, today),
         getTraineeDiet(client, today),
         getDailyCheckin(client, today),
@@ -84,10 +84,9 @@ export function TraineeDashboard({ initialTab = 'training', focus = '' }) {
         getTraineeWeeklyPlan(client, weekStartDate, weekEndDate),
         getTraineeAllPlans(client),
         getTraineeCheckinHistory(client, historyStart, localToday),
-        client.isLocal ? client.operations.getDayPlan(today) : null,
       ]);
 
-      setData({ workout, diet, checkin, streak, weeklyPlan, allPlans, history, dayPlan });
+      setData({ workout, diet, checkin, streak, weeklyPlan, allPlans, history });
       setRecoveryDirty(false);
       setTraineeNotes(checkin.checkin?.trainee_notes || '');
     } catch (nextError) { setError(nextError.message); } finally { setLoading(false); }
@@ -137,8 +136,8 @@ export function TraineeDashboard({ initialTab = 'training', focus = '' }) {
       </div>
       {activeTab === 'day' && <>
         <div data-guide="trainee-day">
-        {client.isLocal ? <DayPlanner key={today} initial={data.dayPlan} wellness={checkin.checkin?.wellness} scheduledMinutes={workout.days.reduce((sum, day) => sum + Number(day.estimated_duration_minutes || 0), 0)} readOnly={isReadOnly} onSave={(input) => client.operations.saveDayPlan(today, input)} /> : <PageState title="Daily planning is not available for this account yet" message="You can still view your training plan and share notes with your coach." />}
-        <ActivityHistory records={history.filter((row) => row.checkin_date >= addDays(getLocalDateString(), -13))} isSample={profile.is_sample} onSelect={(date) => { setDate(date); selectTab('training'); }} />
+        <DailyPlanning client={client} date={today} wellness={checkin.checkin?.wellness} scheduledMinutes={workout.days.reduce((sum, day) => sum + Number(day.estimated_duration_minutes || 0), 0)} readOnly={isReadOnly} onOpenTraining={() => selectTab('training')} />
+        <ActivityHistory records={history.filter((row) => row.checkin_date >= addDays(getLocalDateString(), -13))} isSample={profile.is_sample} canLogRecovery={Boolean(client.isLocal)} onSelect={(date) => { setDate(date); selectTab('training'); }} />
         </div>
       </>}
 
