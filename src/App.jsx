@@ -52,5 +52,5 @@ export default function App() {
   else if (authorizedPath === 'diet') page = <DietAssignment requestedTraineeId={requested.query.get('trainee')} />;
   else page = <PlaceholderPage route={authorizedPath} />;
 
-  return <AppShell route={authorizedPath} navigate={navigate} role={auth.profile.role} profile={auth.profile} onLogout={logout}>{auth.client.isLocal ? <div className="local-workspace-banner"><span>{auth.profile.is_sample ? 'SAMPLE WORKSPACE' : 'LOCAL WORKSPACE'}</span><small>{auth.profile.is_sample ? 'Illustrative activity · Saved in this browser only' : 'Saved in this browser only · Cloud sync is not connected'}</small></div> : null}<Suspense fallback={<PageState title="Loading workspace" />}>{page}</Suspense></AppShell>;
+  return <AppShell key={auth.profile.id} isLocal={auth.client.isLocal} route={authorizedPath} navigate={navigate} role={auth.profile.role} profile={auth.profile} onLogout={logout}>{auth.client.isLocal ? <div className="local-workspace-banner"><span>{auth.profile.is_sample ? 'SAMPLE WORKSPACE' : 'LOCAL WORKSPACE'}</span><small>{auth.profile.is_sample ? 'Illustrative activity · Saved in this browser only' : 'Saved in this browser only · Cloud sync is not connected'}</small></div> : null}<Suspense fallback={<PageState title="Loading workspace" />}>{page}</Suspense></AppShell>;
 }

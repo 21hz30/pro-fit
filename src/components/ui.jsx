@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { WorkspaceGuide } from './WorkspaceGuide.jsx';
 import {
   ArrowRight, BarChart3, Bell, CalendarDays, CalendarRange, History, MessageSquare, Timer, Clock, ClipboardCheck, Camera, CheckCheck, ChevronLeft,
   ChevronRight, Circle, CircleCheck, CircleHelp, CirclePlay, CirclePlus,
@@ -111,53 +112,6 @@ export function PageState({ icon = 'loading', title, message, action }) {
   return <div className="empty-state page-state"><Icon name={icon} className={icon === 'loading' ? 'spin' : ''} /><strong>{title}</strong>{message ? <span>{message}</span> : null}{action}</div>;
 }
 
-const workspaceGuides = {
-  trainee: {
-    eyebrow: 'COACHEE · START HERE',
-    title: 'Follow your plan one step at a time',
-    intro: 'Use this loop each day: check the plan, log what happened, then send your check-in to your coach.',
-    steps: [
-      { number: '01', icon: 'fitness_center', title: "Today's Training", text: 'See the workout your coach assigned for today. Open an exercise guide when you need help with form.', route: 'trainee', action: 'Open today\'s plan' },
-      { number: '02', icon: 'calendar_today', title: 'My Day', text: 'Plan training, recovery, and school around the same day so the plan fits real life.', route: 'day', action: 'Open My Day' },
-      { number: '03', icon: 'done_all', title: 'Daily check-in', text: 'Log your workout and meals, add a note about how you feel, then submit it for coach feedback.', route: 'trainee?focus=checkin', action: 'Go to check-in' },
-      { number: '04', icon: 'history', title: 'Training History', text: 'Look back at completed sessions and feedback to see what is working over time.', route: 'trainee/history', action: 'View history' },
-    ],
-    footer: 'Start with Today\'s Training. You can come back to this guide from the Help button whenever a label is unclear.',
-  },
-  coach: {
-    eyebrow: 'COACH · START HERE',
-    title: 'Turn a check-in into the next action',
-    intro: 'Use this flow to support a coachee: review their update, adjust the plan, then publish clear instructions.',
-    steps: [
-      { number: '01', icon: 'group', title: 'Coachees', text: 'Review your roster, recent check-ins, recovery signals, and feedback requests in one place.', route: 'coach', action: 'Open coachees' },
-      { number: '02', icon: 'fitness_center', title: 'Workouts', text: 'Choose a coachee, load the basketball template or edit each day, then save a draft or publish it.', route: 'workout', action: 'Assign a workout' },
-      { number: '03', icon: 'restaurant', title: 'Nutrition', text: 'Set daily targets, add meals and practical notes, then publish the plan for the selected coachee.', route: 'diet', action: 'Build nutrition plan' },
-      { number: '04', icon: 'calendar_today', title: 'Weekly Schedule', text: 'Check the published week by coachee and open a workout plan when dates or sessions need changing.', route: 'schedule', action: 'View schedule' },
-    ],
-    footer: 'Start with Coachees to understand the context. Use the Help button again whenever you need a reminder of the flow.',
-  },
-};
-
-export function WorkspaceGuide({ role, onNavigate, onClose }) {
-  const guide = workspaceGuides[role] || workspaceGuides.trainee;
-  return <Modal title="How Pro-fit works" onClose={onClose}>
-    <div className="workspace-guide">
-      <p className="workspace-guide__eyebrow">{guide.eyebrow}</p>
-      <h3>{guide.title}</h3>
-      <p className="workspace-guide__intro">{guide.intro}</p>
-      <div className="workspace-guide__steps">
-        {guide.steps.map((step) => <article className="workspace-guide__step" key={step.number}>
-          <span className="workspace-guide__number">{step.number}</span>
-          <Icon name={step.icon} />
-          <div><h4>{step.title}</h4><p>{step.text}</p></div>
-          <Button variant="outline" onClick={() => { onNavigate(step.route); onClose(); }}>{step.action}</Button>
-        </article>)}
-      </div>
-      <p className="workspace-guide__footer"><Icon name="help" />{guide.footer}</p>
-    </div>
-  </Modal>;
-}
-
 const roleNav = {
   trainee: [{ label: "Today's Training", icon: 'fitness_center', route: 'trainee' }, { label: 'My Day', icon: 'calendar_today', route: 'day' }],
   coach: [
@@ -168,22 +122,10 @@ const roleNav = {
   ],
 };
 
-export function AppShell({ route, navigate, role, profile, onLogout, children }) {
+export function AppShell({ route, navigate, role, profile, isLocal, onLogout, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [guideOpen, setGuideOpen] = useState(false);
+  const [guideMode, setGuideMode] = useState('full');
   const navItems = roleNav[role] || [];
-  const guideStorageKey = `pro-fit.guide.seen.v1:${profile?.id || role}`;
-  useEffect(() => {
-    if (!profile?.id || typeof window === 'undefined') return;
-    try {
-      if (!window.sessionStorage.getItem(guideStorageKey)) {
-        setGuideOpen(true);
-        window.sessionStorage.setItem(guideStorageKey, '1');
-      }
-    } catch {
-      // Private browsing can block session storage; the Help button still opens the guide.
-    }
-  }, [guideStorageKey, profile?.id]);
   const NavButtons = ({ closeAfter = false }) => navItems.map((item) => (
     <button key={item.route} className={route === item.route ? 'active' : ''} onClick={() => { navigate(item.route); if (closeAfter) setMenuOpen(false); }}>
       <Icon name={item.icon} filled={route === item.route} /><span>{item.label}</span>
@@ -191,12 +133,13 @@ export function AppShell({ route, navigate, role, profile, onLogout, children })
   ));
   return (
     <div className="app-shell">
+      <div className="workspace-surface" inert={Boolean(guideMode)}>
       <aside className="sidebar" aria-label="Primary navigation">
         <Brand />
         <nav className="sidebar__nav"><NavButtons /></nav>
         <div className="sidebar__footer">
           {role === 'coach' ? <Button onClick={() => navigate('workout')}>Assign Plan</Button> : null}
-          <button className="sidebar__utility sidebar__help" onClick={() => setGuideOpen(true)}><Icon name="help" /><span>How it works</span></button>
+          <button className="sidebar__utility sidebar__help" data-guide="workspace-help" onClick={() => setGuideMode('page')}><Icon name="help" /><span>How it works</span></button>
           <span className="signed-in-as">{profile?.display_name}<small>{role === 'coach' ? 'Coach' : 'Coachee'}</small></span>
           <button className="sidebar__utility" onClick={onLogout}><Icon name="logout" /><span>Logout</span></button>
         </div>
@@ -204,20 +147,21 @@ export function AppShell({ route, navigate, role, profile, onLogout, children })
       <header className="mobile-header">
         <button className="icon-button" onClick={() => setMenuOpen(true)} aria-label="Open navigation"><Icon name="menu" /></button>
         <Brand compact />
-        <button className="icon-button mobile-help" onClick={() => setGuideOpen(true)} aria-label="Open how it works"><Icon name="help" /></button>
+        <button className="icon-button mobile-help" data-guide="workspace-help" onClick={() => setGuideMode('page')} aria-label="Open how it works"><Icon name="help" /></button>
       </header>
       {menuOpen ? (
         <div className="mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigation">
           <div className="mobile-drawer__panel">
             <button className="icon-button mobile-drawer__close" onClick={() => setMenuOpen(false)} aria-label="Close navigation"><Icon name="close" /></button>
-            <Brand /><NavButtons closeAfter /><button onClick={() => { setGuideOpen(true); setMenuOpen(false); }}><Icon name="help" /><span>How it works</span></button><button onClick={onLogout}><Icon name="logout" /><span>Logout</span></button>
+            <Brand /><NavButtons closeAfter /><button onClick={() => { setGuideMode('page'); setMenuOpen(false); }}><Icon name="help" /><span>How it works</span></button><button onClick={onLogout}><Icon name="logout" /><span>Logout</span></button>
           </div>
           <button className="mobile-drawer__backdrop" aria-label="Close navigation" onClick={() => setMenuOpen(false)} />
         </div>
       ) : null}
       <main className="app-main">{children}</main>
       <nav className="mobile-nav" aria-label="Mobile navigation"><NavButtons /></nav>
-      {guideOpen ? <WorkspaceGuide role={role} onNavigate={navigate} onClose={() => setGuideOpen(false)} /> : null}
+      </div>
+      {guideMode ? <WorkspaceGuide role={role} isLocal={isLocal} route={route} onNavigate={navigate} currentPageOnly={guideMode === 'page'} onClose={() => setGuideMode(null)} /> : null}
     </div>
   );
 }

@@ -123,7 +123,7 @@ export function TraineeDashboard({ initialTab = 'training', focus = '' }) {
         </div>
       </header>
 
-      <div className="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
+      <div className="dashboard-tabs" role="tablist" aria-label="Dashboard sections" data-guide="trainee-tabs">
         <button role="tab" aria-selected={activeTab === 'training'} className={activeTab === 'training' ? 'active' : ''} onClick={() => selectTab('training')}>
           <Icon name="fitness_center" />Today's Training
         </button>
@@ -136,8 +136,10 @@ export function TraineeDashboard({ initialTab = 'training', focus = '' }) {
         <button role="tab" aria-selected={activeTab === 'day'} className={activeTab === 'day' ? 'active' : ''} onClick={() => selectTab('day')}><Icon name="calendar_today" />My Day</button>
       </div>
       {activeTab === 'day' && <>
+        <div data-guide="trainee-day">
         {client.isLocal ? <DayPlanner key={today} initial={data.dayPlan} wellness={checkin.checkin?.wellness} scheduledMinutes={workout.days.reduce((sum, day) => sum + Number(day.estimated_duration_minutes || 0), 0)} readOnly={isReadOnly} onSave={(input) => client.operations.saveDayPlan(today, input)} /> : <PageState title="Daily planning is not available for this account yet" message="You can still view your training plan and share notes with your coach." />}
         <ActivityHistory records={history.filter((row) => row.checkin_date >= addDays(getLocalDateString(), -13))} isSample={profile.is_sample} onSelect={(date) => { setDate(date); selectTab('training'); }} />
+        </div>
       </>}
 
       {/* TODAY'S TRAINING TAB */}
@@ -149,7 +151,7 @@ export function TraineeDashboard({ initialTab = 'training', focus = '' }) {
         {client.isLocal ? <section className="panel recovery-panel"><SectionHeader>Recovery &amp; Cardio Check-in</SectionHeader><RecoveryCheckin key={today} initial={checkin.checkin?.wellness} readOnly={isReadOnly} onDirty={() => setRecoveryDirty(true)} onSave={async (input) => { const saved = await client.operations.saveWellness(today, input); setData((previous) => ({ ...previous, checkin: { ...previous.checkin, checkin: saved } })); setRecoveryDirty(false); }} /></section> : null}
 
         <div className="trainee-grid">
-          <section className="panel workout-panel">
+          <section className="panel workout-panel" data-guide="training-workout">
             <SectionHeader trailing={<span className="status-block">{workout.days.length} scheduled</span>}>Daily Workout Plan</SectionHeader>
             <div className="exercise-list">
               {workout.days.length ? workout.days.flatMap((day) => day.items.map((item, index) => {
@@ -182,7 +184,7 @@ export function TraineeDashboard({ initialTab = 'training', focus = '' }) {
             </div>)}
           </section>
 
-          <section className="panel nutrition-panel">
+          <section className="panel nutrition-panel" data-guide="training-nutrition">
             <SectionHeader trailing={<Icon name="restaurant_menu" />}>Nutrition Plan &amp; Log</SectionHeader>
             <div className="nutrition-panel__content">
               <section className="macro-section">
@@ -220,7 +222,7 @@ export function TraineeDashboard({ initialTab = 'training', focus = '' }) {
           </section>
         </div>
 
-        <section className="panel checkin-submit" ref={checkinRef}>
+        <section className="panel checkin-submit" ref={checkinRef} data-guide="training-checkin">
           <SectionHeader trailing={<span className="status-chip">{checkin.checkin?.status || 'not started'}</span>}>Submit Daily Check-in</SectionHeader>
           <div>
             <TextAreaField label="Additional notes for your coach" value={traineeNotes} onChange={(event) => setTraineeNotes(event.target.value)} disabled={isReadOnly} placeholder="Questions or anything else you want your coach to know…" />
@@ -239,7 +241,7 @@ export function TraineeDashboard({ initialTab = 'training', focus = '' }) {
 
       {/* WEEKLY PLAN TAB */}
       {activeTab === 'week' && <>
-        <section className="panel">
+        <section className="panel" data-guide="trainee-week">
           <SectionHeader>This Week's Training Schedule</SectionHeader>
           {weeklyPlan && weeklyPlan.length ? <div className="weekly-plan-grid">
             {weeklyPlan.map((day) => {
@@ -276,7 +278,7 @@ export function TraineeDashboard({ initialTab = 'training', focus = '' }) {
 
       {/* TRAINING HISTORY TAB */}
       {activeTab === 'history' && <>
-        <section className="panel">
+        <section className="panel" data-guide="trainee-history">
           <SectionHeader>Recent Check-ins (Last 30 Days)</SectionHeader>
           {history && history.length ? <div className="history-list">
             {history.map((checkin) => {

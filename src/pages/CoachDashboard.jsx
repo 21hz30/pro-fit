@@ -87,7 +87,7 @@ export function CoachDashboard({ navigate }) {
     <div className="page coach-page">
       <div className="coach-main">
         {/* Primary Metrics */}
-        <section className="metric-grid">
+        <section className="metric-grid" data-guide="coach-overview">
           <MetricCard
             title="Total Coachees"
             value={roster.length}
@@ -223,7 +223,7 @@ export function CoachDashboard({ navigate }) {
         </section>
 
         {/* Roster Table */}
-        <section className="roster">
+        <section className="roster" data-guide="coach-roster">
           <SectionHeader>Coachee Roster ({filtered.length})</SectionHeader>
           <div className="roster__head">
             <span>Athlete</span>
@@ -265,7 +265,7 @@ export function CoachDashboard({ navigate }) {
       </div>
 
       {/* Live Feed Sidebar */}
-      <aside className="live-feed">
+      <aside className="live-feed" data-guide="coach-activity">
         <SectionHeader trailing={<Icon name="sensors" />}>Recent Activity</SectionHeader>
         <div className="live-feed__items">
           {summary.checkins.length ? summary.checkins.slice(0, 10).map((item) => {
