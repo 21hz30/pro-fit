@@ -33,7 +33,7 @@ Cloud schema and policy changes must be verified separately before a live pilot;
 
 Use [supabase/demo/README.md](supabase/demo/README.md) for the single supported cloud demo setup. Earlier scripts are preserved as inert text in `supabase/demo/archive`. Never import fictional history into a real student workspace.
 
-For the current university application recording sequence, use [UNIVERSITY_DEMO_VIDEO_MEMO.md](UNIVERSITY_DEMO_VIDEO_MEMO.md). It describes the verified Michael and Coach Ben flow and the current cloud feature boundaries.
+For the university application video, read [DEMO_PRESENTATION_SCRIPT.md](DEMO_PRESENTATION_SCRIPT.md): Michael's original story, updated English narration, and Chinese click instructions matched to the page guides. [UNIVERSITY_DEMO_VIDEO_MEMO.md](UNIVERSITY_DEMO_VIDEO_MEMO.md) covers recording preparation, the shorter cut, and current feature boundaries.
 
 ## Git
 

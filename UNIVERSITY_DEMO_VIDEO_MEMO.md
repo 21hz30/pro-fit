@@ -1,79 +1,56 @@
 # Pro-fit University Application Demo Video Memo
 
-**Version:** 2026-10-03  
-**Purpose:** Recording guide for a short university application video  
-**Recommended length:** 5–6 minutes
+Version: 2026-10-03 · Revised around Michael's original script and the current page guides.
 
-## What the video should communicate
+## Read this script when recording
 
-Pro-fit is a training workspace for student athletes and coaches. It connects a coach-assigned plan with the student’s real day: available time, school workload, energy, training logs, meals, check-ins, and coach feedback.
+Use [DEMO_PRESENTATION_SCRIPT.md](DEMO_PRESENTATION_SCRIPT.md) as the current recording script. It preserves the original opening about helping school teammates and pairs each English narration segment with Chinese click instructions. English narration is about 1,000 words; allow 8-9 minutes with screen transitions.
 
-The video should show a real product journey rather than a list of screens:
+The local English and Chinese rehearsal copies are in `outputs/Pro-fit English Demo Script.md` and `outputs/Pro-fit Chinese Demo Script.md`. The PDF in `output/pdf/Pro-fit_University_Demo_Video_Memo.pdf` includes the updated recording script.
 
-1. A student athlete has a training plan but also has school and changing energy levels.
-2. The athlete follows the plan, records what happened, and uses **My Day** to make the plan fit.
-3. The coach reviews the information and uses it to plan the next action.
+## Recording order
 
-## Recording setup
+| Script section | Account and page | Main action |
+| --- | --- | --- |
+| 1. Why I built Pro-fit | Michael on camera or landing page | Tell the school-teammate story. |
+| 2. Role-based entry | Coach Ben · Coachees | Show the Guide highlight, Next, Back, and Skip guide. |
+| 3. Coach creates a plan | Coach Ben · Workouts, Nutrition, Weekly Schedule | Show the template, plan fields, Save Draft / Publish Plan, meals, and published week. |
+| 4. Athlete follows the plan | Michael · Today's Training | Show the login Guide, Exercise Guide, Log Workout, and Log a Meal. |
+| 5. Looking ahead | Michael · Weekly Plan | Open a scheduled day through View Details. |
+| 6. Make the plan fit | Michael · My Day | Show page help, then 30 minutes + Exams / heavy homework + Feeling ready. |
+| 7. Send the day | Michael · Today's Training | Show check-in notes, Submit Daily Check-in, and the read-only result if using a demo record. |
+| 8. Coach review | Coach Ben · Coachees | Open Review; show logs, notes, and the feedback field. |
+| 9. Looking back | Michael · Training History | Use View check-in to reopen a record and read available feedback. |
+| 10-11. Improvement and closing | Michael on camera or My Day | Explain the training-feedback loop and return to the original motivation. |
 
-- Use a clean browser window at 1440×900 or 1920×1080.
-- Record the local app at `http://127.0.0.1:5173/` after the server has loaded.
-- Use the existing demo accounts for **Michael · Coachee** and **Coach Ben · Coach**. Pre-login before recording, and never show email addresses, passwords, tokens, or private account details on screen.
-- Keep the browser zoom at 90–100% and enable cursor highlighting.
-- Record voice clearly. Add English captions if the application portal allows them.
-- Use the current cloud-backed demo when available. If recording in local mode, describe it as a local demonstration and do not present browser-only data as production evidence.
+## Use the Guide to make the screen clear
 
-## Before pressing Record
+The full Guide appears after login. Coach has 9 steps; Coachee has 8. Each step highlights a real part of the page. The script follows the same content without requiring every Guide step to be read aloud.
 
-- Open the landing page and confirm the correct role name is visible after login.
-- Let the first-login guide appear. It can be advanced with **Next**, dismissed with **Skip guide**, and reopened through **How it works**.
-- Confirm that Michael can open **Today's Training**, **Weekly Plan**, **Training History**, and **My Day**.
-- Confirm that the My Day page shows **Time available**, **School workload**, **Energy right now**, and **Save daily priorities**.
-- Use existing demo records for the coach review. Do not submit Michael’s real check-in or create personal records during the recording unless the demo workspace has been reset for that purpose.
-- Close unrelated tabs and notifications. Hide bookmarks and personal browser information.
+- **Next** moves to the next explanation; **Back** returns to the previous one.
+- **Skip guide** closes the Guide at any point.
+- **How it works** reopens help for the current page. On Workouts it covers the template, plan details, and draft/publication. On My Day it covers daily planning and recent check-ins.
+- **Finish** closes the last step.
+- Close the Guide before clicking or typing into the underlying page.
 
-## Recommended recording sequence
+## Prepare the recording
 
-| Time | Screen action | Suggested narration | Evidence to show |
-|---|---|---|---|
-| 0:00–0:30 | Start with the Pro-fit title or landing page. | “I built Pro-fit to help student athletes connect training with the reality of school, recovery, and daily time constraints.” | Product name and the student-athlete problem. |
-| 0:30–1:00 | Briefly introduce the two roles. | “A coach creates and reviews the plan. A student sees a clear next step, records what actually happened, and communicates back.” | Role-based workspace idea. |
-| 1:00–1:20 | Log in as Michael and show the page guide. Advance one or two steps, then choose **Skip guide**. | “The first-login guide explains what each page does. It can be skipped and reopened later from How it works.” | Contextual guide, Next/Skip behavior, accessible help. |
-| 1:20–2:00 | On **Today's Training**, show the workout, one **Exercise Guide**, the nutrition plan, and the check-in area. | “Michael starts with today’s coach-assigned plan. The page shows the session, movement guidance, meal ideas, and the place to send a daily check-in.” | Training details, exercise guidance, nutrition, check-in workflow. |
-| 2:00–2:45 | Open **My Day**. Change the three selectors to a realistic example such as 30 minutes, a typical school day, and low energy. Click **Save daily priorities**. | “My Day lets the student describe the day before training. Pro-fit suggests a manageable approach without replacing the coach’s assigned plan.” | Time, school workload, energy, saved priorities, suggested approach. |
-| 2:45–3:15 | Show **Training History** or the recent check-ins section on My Day. | “The student can return to recent check-ins and coach feedback, so progress is a conversation rather than a single completion checkbox.” | History and feedback context. |
-| 3:15–4:20 | Log out and log in as Coach Ben. Show **Coachees**, the roster, and one existing review. | “The coach sees the assigned athletes and can review the information that came back from training. This supports a more specific next decision.” | Roster, plan status, check-in review, feedback. |
-| 4:20–4:50 | Open **Workouts** or **Assign Plan** and briefly show the editable plan fields. Do not publish changes during the recording. | “The coach can shape a plan with dates, duration, exercises, sets, reps, rest, and instructions, then publish it when it is ready.” | Coach-side planning workflow. |
-| 4:50–5:30 | End on either My Day or the coach roster. | “I built this as a working React and Supabase application. The project taught me to turn a real student-athlete problem into role-based workflows, data rules, and a product that can be tested locally and with two accounts.” | Personal ownership, implementation, and learning. |
+Use a clean 1440 x 900 or 1920 x 1080 browser view at `http://127.0.0.1:5173/`. Record the two registered roles in sequence and cut out login details. Two ordinary tabs in one browser may share authentication; use separate browser profiles if both roles must stay signed in at once.
 
-## Short closing script
+Choose existing published plans and an existing check-in for review. If showing a save/submit action, prepare an editable demo record before recording and use the narration's example only there. A submitted or reviewed day is read-only. Before the My Day segment, set Training date to today in Today's Training and confirm the demo day is still editable.
 
-> Pro-fit is designed to help student athletes train consistently while staying honest about school, energy, and recovery. The coach creates the plan, the student follows and records it, and the next decision is based on the student’s actual day. I built this project to make that communication clearer and more practical.
+Pause for 2-3 seconds after each screen change. Use the actual on-screen button name: Log Workout may become Edit Log, and Save daily priorities may become Update daily priorities. Show Saved for this day after a demo save.
 
-## Accurate feature boundaries for the recording
+## Match the narration to the current product
 
-- **My Day daily priorities are connected to the cloud database** in the current demo. The save flow, account isolation, and read-only behavior after check-in submission have been tested against the project database.
-- **Sleep tracking is still shown as not connected in the cloud workspace.** Do not say that cloud sleep data is already fully persisted. You may describe sleep and recovery as planned or locally demonstrated capabilities.
-- The product is a working demonstration. Do not claim university pilot results, injury reduction, medical outcomes, or measured user impact unless those results have actually been collected and documented.
-- Present the training suggestions as planning support. They are not medical advice or a universal training prescription.
-- Use demo identities and fictional/sample records only. Do not show a real student’s health information, photos, email address, or password.
+The current cloud workspace supports My Day priorities. These choices are private to the student and do not automatically change a workout or appear in the coach review. Context for the coach belongs in daily check-in notes.
 
-## Submission package
+Structured sleep, fatigue, and soreness logging remains a local-mode feature. The revised script describes recovery context through check-in notes instead of claiming the cloud coach view receives structured recovery measurements. If a record has no photo or feedback, show the actual empty state and describe where future entries will appear.
 
-Recommended filenames:
+The opening describes why Michael built the product. Present benefits as goals; show documented results only when real evidence exists. Use demo records in the recording, hide credentials and unrelated personal information, and keep the focus on the ordinary user journey.
 
-- `Michael_Pro-fit_University_Demo_2026.mp4`
-- `Pro-fit_University_Demo_Video_Memo.pdf` or this Markdown memo
+## Shorter cut and video delivery
 
-Before uploading the video, check that the first 10 seconds identify the project, the audio is understandable, the cursor does not cover important controls, and the final file opens without requiring access to the local development server.
+If the application limits the video to five minutes, retain the first opening paragraph and the paragraph beginning “I wanted to solve this...” rather than reading the entire opening. Keep Guide entry, Today's Training, My Day, coach review, and the closing. Show Nutrition and Weekly Schedule briefly as part of the coach-plan segment, and use a short Training History shot during the closing.
 
-## If the recording needs to be shorter
-
-Use this three-minute cut:
-
-1. 20 seconds: problem and purpose.
-2. 45 seconds: Michael’s Today's Training page.
-3. 45 seconds: My Day with the three selectors and Save daily priorities.
-4. 45 seconds: Coach Ben’s roster and review.
-5. 25 seconds: technical learning and closing statement.
-
+Suggested filename: `Michael_Pro-fit_University_Demo_2026.mp4`. Follow the university's actual length, format, and upload requirements. Verify that the exported video opens independently of localhost, its audio and captions are clear, and all visible interactions match the narration. This memo and script are production notes for the recording.
