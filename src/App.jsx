@@ -45,7 +45,7 @@ export default function App() {
     try { await signOut(auth.client); } finally { navigate('login'); }
   }
   let page;
-  if (['trainee', 'trainee/week', 'trainee/history', 'day'].includes(authorizedPath)) page = <TraineeDashboard initialTab={authorizedPath === 'day' ? 'day' : authorizedPath.split('/')[1] || 'training'} />;
+  if (['trainee', 'trainee/week', 'trainee/history', 'day'].includes(authorizedPath)) page = <TraineeDashboard initialTab={authorizedPath === 'day' ? 'day' : authorizedPath.split('/')[1] || 'training'} focus={requested.query.get('focus') || ''} />;
   else if (authorizedPath === 'coach') page = <CoachDashboard navigate={navigate} />;
   else if (authorizedPath === 'workout') page = <WorkoutAssignment requestedTraineeId={requested.query.get('trainee')} />;
   else if (authorizedPath === 'schedule') page = <TrainingSchedule navigate={navigate} />;

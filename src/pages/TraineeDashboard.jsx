@@ -3,7 +3,7 @@ import { ActivityHistory } from '../components/ActivityHistory.jsx';
 import { RecoveryCheckin } from '../components/RecoveryCheckin.jsx';
 import { TrainingPrinciples } from '../components/TrainingWeek.jsx';
 import { weekStart, addDays } from '../domain/training.js';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider.jsx';
 import { getTraineeWorkout, getTraineeWeeklyPlan, getTraineeAllPlans } from '../services/workoutService.js';
 import { getTraineeDiet } from '../services/dietService.js';
@@ -45,8 +45,9 @@ function DietLogModal({ meals, onClose, onSave }) {
   return <Modal title="Log a meal" onClose={onClose}><form className="modal-form" onSubmit={submit}>{meals.length ? <SelectField label="Planned meal" value={form.dietMealId} onChange={(event) => selectMeal(event.target.value)}>{meals.map((meal) => <option key={meal.diet_meal_id} value={meal.diet_meal_id}>{meal.meal_type}: {meal.meal_name || 'Meal'}</option>)}</SelectField> : <SelectField label="Meal type" value={form.mealType} onChange={(event) => setForm({ ...form, mealType: event.target.value })}><option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="dinner">Dinner</option><option value="snack">Snack</option></SelectField>}<TextAreaField label="Actual food" value={form.actualFood} onChange={(event) => setForm({ ...form, actualFood: event.target.value })} placeholder="What did you eat?" /><div className="compact-fields"><Field label="Calories" type="number" min="0" value={form.actualCalories} onChange={(event) => setForm({ ...form, actualCalories: event.target.value })} /><Field label="Protein (g)" type="number" min="0" step="0.1" value={form.actualProteinG} onChange={(event) => setForm({ ...form, actualProteinG: event.target.value })} /><Field label="Carbs (g)" type="number" min="0" step="0.1" value={form.actualCarbsG} onChange={(event) => setForm({ ...form, actualCarbsG: event.target.value })} /><Field label="Fat (g)" type="number" min="0" step="0.1" value={form.actualFatG} onChange={(event) => setForm({ ...form, actualFatG: event.target.value })} /></div><label className="upload-drop"><Icon name="cloud_upload" /><strong>{form.photoFile ? form.photoFile.name : 'Choose a meal photo'}</strong><span>JPG, PNG or WebP · up to 8 MB</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setForm({ ...form, photoFile: event.target.files?.[0] || null })} /></label>{error ? <p className="form-error" role="alert">{error}</p> : null}<Button type="submit" busy={busy}>Save meal log</Button></form></Modal>;
 }
 
-export function TraineeDashboard({ initialTab = 'training' }) {
+export function TraineeDashboard({ initialTab = 'training', focus = '' }) {
   const { client, profile } = useAuth();
+  const checkinRef = useRef(null);
   const [today, setDate] = useState(getLocalDateString);
   const [recoveryDirty, setRecoveryDirty] = useState(false);
   const isFuture = today > getLocalDateString();
@@ -55,6 +56,10 @@ export function TraineeDashboard({ initialTab = 'training' }) {
   const [busySubmit, setBusySubmit] = useState(false); const [traineeNotes, setTraineeNotes] = useState(''); const [toast, setToast] = useState(null);
   const [activeTab, setActiveTab] = useState(initialTab);
   useEffect(() => setActiveTab(initialTab), [initialTab]);
+  useEffect(() => {
+    if (focus !== 'checkin' || loading) return;
+    window.setTimeout(() => checkinRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+  }, [focus, loading]);
   function selectTab(tab) {
     setActiveTab(tab);
     if (tab === 'training') window.location.hash = '/trainee';
@@ -215,7 +220,7 @@ export function TraineeDashboard({ initialTab = 'training' }) {
           </section>
         </div>
 
-        <section className="panel checkin-submit">
+        <section className="panel checkin-submit" ref={checkinRef}>
           <SectionHeader trailing={<span className="status-chip">{checkin.checkin?.status || 'not started'}</span>}>Submit Daily Check-in</SectionHeader>
           <div>
             <TextAreaField label="Additional notes for your coach" value={traineeNotes} onChange={(event) => setTraineeNotes(event.target.value)} disabled={isReadOnly} placeholder="Questions or anything else you want your coach to know…" />
