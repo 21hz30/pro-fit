@@ -33,6 +33,8 @@ Cloud schema and policy changes must be verified separately before a live pilot;
 
 Use [supabase/demo/README.md](supabase/demo/README.md) for the single supported cloud demo setup. Earlier scripts are preserved as inert text in `supabase/demo/archive`. Never import fictional history into a real student workspace.
 
+For the current university application recording sequence, use [UNIVERSITY_DEMO_VIDEO_MEMO.md](UNIVERSITY_DEMO_VIDEO_MEMO.md). It describes the verified Michael and Coach Ben flow and the current cloud feature boundaries.
+
 ## Git
 
 `git log --oneline` lists commits. A single push can transfer many commits. `git remote -v` shows the configured GitHub destination. `push.sh` uses `origin` and the current branch with normal Git authentication; it stores no token. An older local script contained a token: removing the file content does not revoke that credential; revoke it in GitHub settings.
