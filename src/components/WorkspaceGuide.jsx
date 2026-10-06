@@ -2,6 +2,8 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { getGuideLayout } from '../domain/guideLayout.js';
 import { getWorkspaceGuideSteps } from './workspaceGuideSteps.js';
 
+const GUIDE_STEP_COOLDOWN_MS = 1200;
+
 export function WorkspaceGuide({ role, isLocal, route, onNavigate, onClose, currentPageOnly = false }) {
   const [steps] = useState(() => {
     const all = getWorkspaceGuideSteps(role, isLocal);
@@ -11,10 +13,14 @@ export function WorkspaceGuide({ role, isLocal, route, onNavigate, onClose, curr
   const [index, setIndex] = useState(0);
   const [targetRect, setTargetRect] = useState(null);
   const [unavailable, setUnavailable] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [isAdvancing, setIsAdvancing] = useState(false);
   const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [cardSize, setCardSize] = useState({ width: 340, height: 260 });
   const cardRef = useRef(null);
   const headingRef = useRef(null);
+  const advanceLockRef = useRef(false);
+  const unlockTimerRef = useRef(null);
   const navigateRef = useRef(onNavigate);
   const closeRef = useRef(onClose);
   navigateRef.current = onNavigate;
@@ -43,6 +49,7 @@ export function WorkspaceGuide({ role, isLocal, route, onNavigate, onClose, curr
     return () => {
       document.body.style.overflow = overflow;
       document.removeEventListener('keydown', keyboard);
+      window.clearTimeout(unlockTimerRef.current);
       if (previous?.isConnected) previous.focus({ preventScroll: true });
     };
   }, []);
@@ -62,6 +69,7 @@ export function WorkspaceGuide({ role, isLocal, route, onNavigate, onClose, curr
     headingRef.current?.focus({ preventScroll: true });
     setTargetRect(null);
     setUnavailable(false);
+    setIsReady(false);
     if (route !== step.route) navigateRef.current(step.route);
     let target = null;
     let frame = 0;
@@ -84,7 +92,8 @@ export function WorkspaceGuide({ role, isLocal, route, onNavigate, onClose, curr
         const topPadding = size.width <= 860 ? 90 : 30;
         const availableBottom = size.height - cardHeight - 50;
         if (rect.top < topPadding || rect.bottom > availableBottom) {
-          window.scrollBy({ top: rect.top - topPadding, behavior: 'instant' });
+          const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+          window.scrollBy({ top: rect.top - topPadding, behavior });
         }
         scrolled = true;
       }
@@ -92,13 +101,33 @@ export function WorkspaceGuide({ role, isLocal, route, onNavigate, onClose, curr
       const next = { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
       setTargetRect((previous) => previous && Object.keys(next).every((key) => Math.abs(previous[key] - next[key]) < 1) ? previous : next);
       setUnavailable(false);
+      setIsReady(true);
+      if (advanceLockRef.current) {
+        window.clearTimeout(unlockTimerRef.current);
+        unlockTimerRef.current = window.setTimeout(() => {
+          advanceLockRef.current = false;
+          setIsAdvancing(false);
+        }, GUIDE_STEP_COOLDOWN_MS);
+      }
     }
     function scheduleUpdate() { cancelAnimationFrame(frame); frame = requestAnimationFrame(update); }
     function handleResize() { scrolled = false; scheduleUpdate(); }
     const resizeObserver = new ResizeObserver(scheduleUpdate);
     const mutationObserver = new MutationObserver(scheduleUpdate);
     mutationObserver.observe(document.querySelector('.workspace-surface'), { childList: true, subtree: true });
-    const timeout = window.setTimeout(() => { if (!target) setUnavailable(true); }, 10000);
+    const timeout = window.setTimeout(() => {
+      if (!target) {
+        setUnavailable(true);
+        setIsReady(true);
+        if (advanceLockRef.current) {
+          window.clearTimeout(unlockTimerRef.current);
+          unlockTimerRef.current = window.setTimeout(() => {
+            advanceLockRef.current = false;
+            setIsAdvancing(false);
+          }, GUIDE_STEP_COOLDOWN_MS);
+        }
+      }
+    }, 10000);
     window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', scheduleUpdate, true);
     window.visualViewport?.addEventListener('resize', handleResize);
@@ -113,6 +142,24 @@ export function WorkspaceGuide({ role, isLocal, route, onNavigate, onClose, curr
     };
   }, [step, route]);
 
+  function move(delta) {
+    if (!isReady || advanceLockRef.current) return;
+    advanceLockRef.current = true;
+    setIsAdvancing(true);
+    setIndex((value) => value + delta);
+  }
+
+  function next() {
+    if (!isReady || advanceLockRef.current) return;
+    if (index === steps.length - 1) {
+      onClose();
+      return;
+    }
+    advanceLockRef.current = true;
+    setIsAdvancing(true);
+    setIndex((value) => value + 1);
+  }
+
   const layout = getGuideLayout(targetRect, viewport, cardSize);
   const hole = layout.spotlight;
   const mask = `M0,0 H${viewport.width} V${viewport.height} H0 Z${hole ? ` M${hole.x},${hole.y} h${hole.width} v${hole.height} h-${hole.width} Z` : ''}`;
@@ -124,10 +171,10 @@ export function WorkspaceGuide({ role, isLocal, route, onNavigate, onClose, curr
       <div className="guided-tour__dots" aria-hidden="true">{steps.map((_, position) => <i key={position} className={position <= index ? 'active' : ''} />)}</div>
       <h2 id={titleId} ref={headingRef} tabIndex={-1}>{step.title}</h2>
       <p id={descriptionId}>{step.text}</p>
-      {!hole ? <p className="guided-tour__loading" role="status">{unavailable ? 'This section is unavailable right now. You can continue the guide or skip it.' : 'Opening this section…'}</p> : null}
+      {isAdvancing ? <p className="guided-tour__loading" role="status">Moving to the next section…</p> : !hole ? <p className="guided-tour__loading" role="status">{unavailable ? 'This section is unavailable right now. You can continue the guide or skip it.' : 'Opening this section…'}</p> : null}
       <div className="guided-tour__actions">
         <button className="guided-tour__skip" onClick={onClose}>Skip guide</button>
-        <div><button className="guided-tour__back" disabled={index === 0} onClick={() => setIndex((value) => value - 1)}>Back</button><button className="guided-tour__next" onClick={() => index === steps.length - 1 ? onClose() : setIndex((value) => value + 1)}>{index === steps.length - 1 ? 'Finish' : 'Next'}<span aria-hidden="true">→</span></button></div>
+        <div><button className="guided-tour__back" disabled={index === 0 || !isReady || isAdvancing} onClick={() => move(-1)}>Back</button><button className="guided-tour__next" disabled={!isReady || isAdvancing} onClick={next}>{index === steps.length - 1 ? 'Finish' : 'Next'}<span aria-hidden="true">→</span></button></div>
       </div>
     </section>
   </div>;

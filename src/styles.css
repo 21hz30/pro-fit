@@ -244,6 +244,7 @@ h1, h2, h3, p { margin-top: 0; }
 .guided-tour__card .guided-tour__loading { font-size: 11px; color: #8a3217; margin: -8px 0 18px; }
 .guided-tour__actions, .guided-tour__actions > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .guided-tour__actions button { min-height: 40px; padding: 8px 12px; border: 1px solid #c8b7a5; background: transparent; font-size: 11px; font-weight: 700; }
+.guided-tour__actions button:disabled { cursor: wait; opacity: .48; }
 .guided-tour__actions button:hover { border-color: var(--orange-dark); }
 .guided-tour__actions .guided-tour__skip { border: 0; text-decoration: underline; text-underline-offset: 4px; padding-left: 0; }
 .guided-tour__actions .guided-tour__next { display: inline-flex; align-items: center; gap: 10px; background: var(--orange-dark); color: white; border-color: var(--orange-dark); }
